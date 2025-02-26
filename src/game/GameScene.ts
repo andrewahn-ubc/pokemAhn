@@ -3,10 +3,16 @@ import Phaser from "phaser";
 export default class GameScene extends Phaser.Scene {
   private player!: Phaser.Physics.Arcade.Sprite;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
-  private bgWidth = 2000; // Width of your background image (for some reason, it's half the actual width (actual: 4000))
-  private bgHeight = 2000; // Height of your background image (for some reason, it's half the actual height (actual: 4000))
+  private bgWidth = 2370; // Width of your background image (for some reason, it's half the actual width (actual: 4000))
+  private bgHeight = 2370; // Height of your background image (for some reason, it's half the actual height (actual: 4000))
   private xCoord!: Phaser.GameObjects.Text;
   private yCoord!: Phaser.GameObjects.Text;
+  private bg!: Phaser.GameObjects.Image;
+  // the background is divided into a n x n grid full of cells
+  private dimension = 40;
+  private cellWidth = 0;
+  private cellHeight = 0; 
+  private moveEvent: Phaser.Time.TimerEvent | null = null;
 
   constructor() {
     super("GameScene");
@@ -20,13 +26,19 @@ export default class GameScene extends Phaser.Scene {
 
   create() {
     // background and character
-    this.add.image(window.innerWidth/2, window.innerHeight/2, "background");
+    this.bg = this.add.image(window.innerWidth/2, window.innerHeight/2, "background");
+    console.log(this.bg.width, this.bg.height);
+    this.bgWidth = this.bg.width;
+    this.bgHeight = this.bg.height;
     this.player = this.physics.add.sprite(window.innerWidth/2, window.innerHeight/2, "player");
+    // set cell dimensions
+    this.cellWidth = this.bgWidth / this.dimension;
+    this.cellHeight = this.bgHeight / this.dimension;
 
     // coordinates
-    this.xCoord = this.add.text(20,20,'X: 0', { fontSize: '20px', fill: '#000' });
+    this.xCoord = this.add.text(20,20,'X: 0', { fontSize: '20px', fill: '#256' });
     this.xCoord.setScrollFactor(0);
-    this.yCoord = this.add.text(20,40,'Y: 0', { fontSize: '20px', fill: '#000' });
+    this.yCoord = this.add.text(20,40,'Y: 0', { fontSize: '20px', fill: '#256' });
     this.yCoord.setScrollFactor(0);
 
     // links
@@ -40,7 +52,11 @@ export default class GameScene extends Phaser.Scene {
     this.add.text(window.innerWidth/2 - 400, window.innerHeight/2 - 200, 'Hey, welcome to my website!', { fontSize: '50px', fill: '#000' });
 
     // player can't move "off" the background
-    this.physics.world.setBounds(0, 0, this.bgWidth, this.bgHeight);
+    this.physics.world.setBounds(
+        -this.bgWidth/2 + window.innerWidth, 
+        -this.bgHeight/2 + window.innerHeight, 
+        this.bgWidth - window.innerWidth, 
+        this.bgHeight - window.innerHeight);
     this.player.setCollideWorldBounds(true);
 
     // camera follows the player
@@ -76,18 +92,106 @@ export default class GameScene extends Phaser.Scene {
     this.xCoord.setText("X: " + this.player.x)
     this.yCoord.setText("Y: " + this.player.y)
 
-    if (this.cursors.left.isDown) {
-      this.player.setVelocityX(-300);
-      this.player.anims.play('left')
-    } else if (this.cursors.right.isDown) {
-      this.player.setVelocityX(300);
-      this.player.anims.play('right')
-    } else if (this.cursors.up.isDown) {
-      this.player.setVelocityY(-300);
-      this.player.anims.play('front')
-    } else if (this.cursors.down.isDown) {
-      this.player.setVelocityY(300);
-      this.player.anims.play('front')
+    if (Phaser.Input.Keyboard.JustDown(this.cursors.right)) {
+        this.moveCharacter('right')
     }
+
+    if (Phaser.Input.Keyboard.JustDown(this.cursors.left)) {
+        this.moveCharacter('left')
+    }
+
+    if (Phaser.Input.Keyboard.JustDown(this.cursors.up)) {
+        this.moveCharacter('up')
+    }
+
+    if (Phaser.Input.Keyboard.JustDown(this.cursors.down)) {
+        this.moveCharacter('down')
+    }
+
+    this.handleMovement();
   }
+
+  stopMoving() {
+    if (this.moveEvent) {
+        this.moveEvent.remove(); // Stop the movement loop
+        this.moveEvent = null;
+    }
+}
+
+    handleMovement() {
+        if (this.cursors.left.isDown) {
+            this.startMoving('left')
+            this.player.anims.play('left')
+        } else if (this.cursors.right.isDown) {
+            this.startMoving('right')
+            this.player.anims.play('right')
+        } else if (this.cursors.up.isDown) {
+            this.startMoving('up')
+            this.player.anims.play('front')
+        } else if (this.cursors.down.isDown) {
+            this.startMoving('down')
+            this.player.anims.play('front')
+        } else {
+            this.stopMoving();
+        }
+    }
+
+    moveCharacter(direction: string) {
+        switch (direction) {
+            case "left":
+                this.tweens.add({
+                    targets: this.player,  
+                    x: this.player.x - this.cellWidth, 
+                    duration: 200,         
+                    ease: 'Linear',        
+                    repeat: 0,             
+                    yoyo: false            
+                });
+                break;
+            case "right":
+                this.tweens.add({
+                    targets: this.player,  
+                    x: this.player.x + this.cellWidth, 
+                    duration: 200,         
+                    ease: 'Linear',        
+                    repeat: 0,             
+                    yoyo: false            
+                });
+                break;
+            case "up":
+                this.tweens.add({
+                    targets: this.player,  
+                    y: this.player.y - this.cellHeight, 
+                    duration: 200,         
+                    ease: 'Linear',        
+                    repeat: 0,             
+                    yoyo: false            
+                });
+                break;
+            case "down":
+                this.tweens.add({
+                    targets: this.player,  
+                    y: this.player.y + this.cellHeight, 
+                    duration: 200,         
+                    ease: 'Linear',        
+                    repeat: 0,             
+                    yoyo: false            
+                });
+                break;
+        }
+    
+      }
+
+    startMoving(direction: string) {
+        if (this.moveEvent) return;
+
+        this.moveEvent = this.time.addEvent({
+            delay: 200,
+            loop: true,
+            callback: () => {
+                this.moveCharacter(direction)
+            }
+            
+        })
+    }
 }
