@@ -24,6 +24,8 @@ export default class GameScene extends Phaser.Scene {
     // "center" coordinates (because (0,0) isn't really the "center" of this scene) (in real coordinates)
     private centerX!: integer;
     private centerY!: integer;
+    private playerCenterX!: integer; // offsetting the player bit so that it looks nicer
+    private playerCenterY!: integer;
     // music
     private backgroundMusic!: Phaser.Sound.BaseSound;
     // character movement
@@ -62,9 +64,13 @@ export default class GameScene extends Phaser.Scene {
     // set up the scene!
 
     create() {
+        this.centerX = window.innerWidth/2;
+        this.centerY = window.innerHeight/2;
         this.setUpWorld();
         // character
-        this.player = this.physics.add.sprite(window.innerWidth/2, window.innerHeight/2, "player");
+        this.playerCenterX = this.centerX;
+        this.playerCenterY = this.centerY - 12;
+        this.player = this.physics.add.sprite(this.playerCenterX, this.playerCenterY, "player");
         this.player.setCollideWorldBounds(true);
         // character animations
         this.createAnims();
@@ -147,8 +153,6 @@ export default class GameScene extends Phaser.Scene {
 
     setUpWorld() {
         // background
-        this.centerX = window.innerWidth/2 - 1;
-        this.centerY = window.innerHeight/2 + 12;
         this.bg = this.add.image(this.centerX, this.centerY, "background");
         this.bgWidth = this.bg.width;
         this.bgHeight = this.bg.height;
@@ -261,7 +265,7 @@ export default class GameScene extends Phaser.Scene {
     }
 
     placeBushes() {
-        this.placeGroup([0,0,2,2], "bush");
+        this.placeGroup([1,1,5,5], "bush");
     }
 
     // place a straight path (either horizontal or vertical) given relative coordinates
@@ -400,7 +404,7 @@ export default class GameScene extends Phaser.Scene {
                 this.numHor -= 1;
                 this.tweens.add({
                     targets: this.player,  
-                    x: this.centerX + this.numHor * this.cellWidth, 
+                    x: this.playerCenterX + this.numHor * this.cellWidth, 
                     duration: this.delay,         
                     ease: 'Linear',        
                     repeat: 0,             
@@ -418,7 +422,7 @@ export default class GameScene extends Phaser.Scene {
                 this.numHor += 1
                 this.tweens.add({
                     targets: this.player,  
-                    x: this.centerX + this.numHor * this.cellWidth, 
+                    x: this.playerCenterX + this.numHor * this.cellWidth, 
                     duration: this.delay,         
                     ease: 'Linear',        
                     repeat: 0,             
@@ -436,7 +440,7 @@ export default class GameScene extends Phaser.Scene {
                 this.numVer -= 1;
                 this.tweens.add({
                     targets: this.player,  
-                    y: this.centerY + this.numVer * this.cellHeight, 
+                    y: this.playerCenterY + this.numVer * this.cellHeight, 
                     duration: this.delay,         
                     ease: 'Linear',        
                     repeat: 0,             
@@ -454,7 +458,7 @@ export default class GameScene extends Phaser.Scene {
                 this.numVer += 1;
                 this.tweens.add({
                     targets: this.player,  
-                    y: this.centerY + this.numVer * this.cellHeight, 
+                    y: this.playerCenterY + this.numVer * this.cellHeight, 
                     duration: this.delay,         
                     ease: 'Linear',        
                     repeat: 0,             
