@@ -26,6 +26,8 @@ export default class GameScene extends Phaser.Scene {
     private centerY!: integer;
     // music
     private backgroundMusic!: Phaser.Sound.BaseSound;
+    // character movement
+    private delay = 75; // 200 is optimal
 
     // initialize our scene
 
@@ -131,6 +133,13 @@ export default class GameScene extends Phaser.Scene {
 
         // centering the player in the viewport
         this.cameras.main.startFollow(this.player, true, 1, 1);
+        // create map view
+        const secondCamera = this.cameras.add(window.innerWidth - 4 * this.cellWidth, this.cellHeight, this.cellWidth * 3, this.cellHeight * 3); // (x, y, width, height)
+        // Move camera to a specific position (x, y)
+        secondCamera.scrollX = this.centerX - 50; // Move horizontally
+        secondCamera.scrollY = this.centerY - 50; // Move vertically
+        secondCamera.setZoom(0.04); // Zoom out
+        secondCamera.setBackgroundColor(0x000000); // Black background
 
         // background music 
         this.backgroundMusic = this.sound.add('bgMusic', {
@@ -155,8 +164,8 @@ export default class GameScene extends Phaser.Scene {
     update() {
         this.player.setVelocity(0);
         // update coordinates
-        this.xCoord.setText("X: " + this.player.x)
-        this.yCoord.setText("Y: " + this.player.y)
+        this.xCoord.setText("X: " + Math.floor((this.player.x - this.centerX)/this.cellWidth))
+        this.yCoord.setText("Y: " + Math.floor((this.player.y - this.centerY)/this.cellHeight))
 
         // handle initial arrow click (without this section, there's a pause before player moves)
         if (Phaser.Input.Keyboard.JustDown(this.cursors.right)) {
@@ -202,6 +211,9 @@ export default class GameScene extends Phaser.Scene {
 
         // title
         this.placeTrees(-9,-5,10,-4);
+        this.placeTrees(-9,2,10,3);
+        this.placeTrees(-9,-5,-8,3);
+        this.placeTrees(9,-4,10,3);
     }
 
     // imagining the background as a dimension x dimension matrix, 
@@ -275,7 +287,7 @@ export default class GameScene extends Phaser.Scene {
                 this.tweens.add({
                     targets: this.player,  
                     x: this.centerX + this.numHor * this.cellWidth, 
-                    duration: 200,         
+                    duration: this.delay,         
                     ease: 'Linear',        
                     repeat: 0,             
                     yoyo: false,
@@ -293,7 +305,7 @@ export default class GameScene extends Phaser.Scene {
                 this.tweens.add({
                     targets: this.player,  
                     x: this.centerX + this.numHor * this.cellWidth, 
-                    duration: 200,         
+                    duration: this.delay,         
                     ease: 'Linear',        
                     repeat: 0,             
                     yoyo: false,
@@ -311,7 +323,7 @@ export default class GameScene extends Phaser.Scene {
                 this.tweens.add({
                     targets: this.player,  
                     y: this.centerY + this.numVer * this.cellHeight, 
-                    duration: 200,         
+                    duration: this.delay,         
                     ease: 'Linear',        
                     repeat: 0,             
                     yoyo: false,
@@ -329,7 +341,7 @@ export default class GameScene extends Phaser.Scene {
                 this.tweens.add({
                     targets: this.player,  
                     y: this.centerY + this.numVer * this.cellHeight, 
-                    duration: 200,         
+                    duration: this.delay,         
                     ease: 'Linear',        
                     repeat: 0,             
                     yoyo: false,
@@ -346,7 +358,7 @@ export default class GameScene extends Phaser.Scene {
         if (this.moveEvent) return;
 
         this.moveEvent = this.time.addEvent({
-            delay: 200,
+            delay: this.delay,
             loop: true,
             callback: () => {
                 this.moveCharacter(direction)
