@@ -14,14 +14,14 @@ export default class GameScene extends Phaser.Scene {
     private xCoord!: Phaser.GameObjects.Text;
     private yCoord!: Phaser.GameObjects.Text;
     // the background is divided into a n x n grid full of cells
-    private dimension = 80;
+    private dimension = 80; // the background has to be square
     private cellWidth!: integer;
     private cellHeight!: integer; 
     // number of moves made in the horizontal and vertical directions (right and bottom are +ve)
     private numHor = 0;
     private numVer = 0;
     private moveEvent: Phaser.Time.TimerEvent | null = null;
-    // "center" coordinates (because (0,0) isn't really the "center" of this scene)
+    // "center" coordinates (because (0,0) isn't really the "center" of this scene) (in real coordinates)
     private centerX!: integer;
     private centerY!: integer;
     // music
@@ -54,82 +54,20 @@ export default class GameScene extends Phaser.Scene {
         this.load.audio('bgMusic', 'assets/audio/intro.mp3');
     }
 
-
     // set up the scene!
 
     create() {
-        // background
-        this.bg = this.add.image(window.innerWidth/2, window.innerHeight/2, "background");
-        this.bgWidth = this.bg.width;
-        this.bgHeight = this.bg.height;
-        this.centerX = window.innerWidth/2 + 1;
-        this.centerY = window.innerHeight/2 - 12;
-        // set cell dimensions
-        this.cellWidth = this.bgWidth / this.dimension;
-        this.cellHeight = this.bgHeight / this.dimension;
-        // trees, paths, bushes
-        this.placeForest();
-        // this.add.image(window.innerWidth/2 + 250, window.innerHeight/2 + 200, "bush");
-        // this.add.image(window.innerWidth/2 + 300, window.innerHeight/2 + 200, "path-ver");
-        // this.add.image(window.innerWidth/2 + 350, window.innerHeight/2 + 200, "path-hor");
-        // this.add.image(window.innerWidth/2 + 400, window.innerHeight/2 + 200, "path-tr");
-        // this.add.image(window.innerWidth/2 + 450, window.innerHeight/2 + 200, "path-tl");
-        // this.add.image(window.innerWidth/2 + 500, window.innerHeight/2 + 200, "path-bl");
-        // this.add.image(window.innerWidth/2 + 550, window.innerHeight/2 + 200, "path-br");
-        // links
-        const githubButton = this.add.image(window.innerWidth/2, window.innerHeight/2 - 100, "github").setScale(0.25);
-        githubButton.setInteractive();
-        githubButton.on("pointerdown", () => {
-            window.open("https://github.com/andrewahn-ubc", "_blank"); // Open link in new tab
-        });
-        // welcome
-        this.add.text(window.innerWidth/2 - 8*this.cellHeight, window.innerHeight/2 - 4*this.cellWidth, 'Hey, welcome to my website!', { fontSize: '50px', fill: '#000' });
+        this.setUpWorld();
         // character
         this.player = this.physics.add.sprite(window.innerWidth/2, window.innerHeight/2, "player");
+        this.player.setCollideWorldBounds(true);
         // character animations
-        this.anims.create({
-            key: "left",
-            frames: this.anims.generateFrameNumbers('player', { start: 4, end: 7 }),
-            frameRate: 10,
-            repeat: -1
-        });
-        this.anims.create({
-            key: "right",
-            frames: this.anims.generateFrameNumbers('player', { start: 8, end: 11 }),
-            frameRate: 10,
-            repeat: -1
-        });  
-        this.anims.create({
-            key: "down",
-            frames: this.anims.generateFrameNumbers('player', { start: 0, end: 3 }),
-            frameRate: 10,
-            repeat: -1
-        });
-        this.anims.create({
-            key: "up",
-            frames: this.anims.generateFrameNumbers('player', { start: 12, end: 15 }),
-            frameRate: 10,
-            repeat: -1
-        });
-        this.anims.create({
-            key: "still",
-            frames: [{key: "player", frame: 0}],
-            frameRate: 10,
-            repeat: -1
-        });
+        this.createAnims();
         // coordinates
         this.xCoord = this.add.text(20,20,'X: 0', { fontSize: '20px', fill: '#256' });
         this.xCoord.setScrollFactor(0);
         this.yCoord = this.add.text(20,40,'Y: 0', { fontSize: '20px', fill: '#256' });
         this.yCoord.setScrollFactor(0);
-        
-        // bounding player within background
-        this.physics.world.setBounds(
-            -this.bgWidth/2 + window.innerWidth, 
-            -this.bgHeight/2 + window.innerHeight, 
-            this.bgWidth - window.innerWidth, 
-            this.bgHeight - window.innerHeight);
-        this.player.setCollideWorldBounds(true);
 
         // centering the player in the viewport
         this.cameras.main.startFollow(this.player, true, 1, 1);
@@ -147,16 +85,15 @@ export default class GameScene extends Phaser.Scene {
             volume: 0.5  // Set volume (0.0 to 1.0)
         });
         this.backgroundMusic.play();
-        this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-        this.spaceKey.on('down', () => {
-            if (this.backgroundMusic.isPlaying) {
-                this.backgroundMusic.pause();
-            } else {
-                this.backgroundMusic.resume();
-            }
-        });
-
         if (this.input.keyboard) {
+            this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+            this.spaceKey.on('down', () => {
+                if (this.backgroundMusic.isPlaying) {
+                    this.backgroundMusic.pause();
+                } else {
+                    this.backgroundMusic.resume();
+                }
+            });
             this.cursors = this.input.keyboard.createCursorKeys();
         }
     }
@@ -164,8 +101,9 @@ export default class GameScene extends Phaser.Scene {
     update() {
         this.player.setVelocity(0);
         // update coordinates
-        this.xCoord.setText("X: " + Math.floor((this.player.x - this.centerX)/this.cellWidth))
-        this.yCoord.setText("Y: " + Math.floor((this.player.y - this.centerY)/this.cellHeight))
+        const relativeCoords = this.relativeCoord(this.player.x, this.player.y);
+        this.xCoord.setText("X: " + Math.floor(relativeCoords[0]));
+        this.yCoord.setText("Y: " + Math.floor(relativeCoords[1]));
 
         // handle initial arrow click (without this section, there's a pause before player moves)
         if (Phaser.Input.Keyboard.JustDown(this.cursors.right)) {
@@ -202,6 +140,59 @@ export default class GameScene extends Phaser.Scene {
         }
     }
 
+    setUpWorld() {
+        // background
+        this.centerX = window.innerWidth/2 - 1;
+        this.centerY = window.innerHeight/2 - 12;
+        this.bg = this.add.image(this.centerX, this.centerY, "background");
+        this.bgWidth = this.bg.width;
+        this.bgHeight = this.bg.height;
+
+        // setting boundaries
+        this.physics.world.setBounds(
+            -this.bgWidth/2 + window.innerWidth, 
+            -this.bgHeight/2 + window.innerHeight, 
+            this.bgWidth - window.innerWidth, 
+            this.bgHeight - window.innerHeight);
+
+        // set cell dimensions
+        this.cellWidth = this.bgWidth / this.dimension;
+        this.cellHeight = this.bgHeight / this.dimension;
+
+        // trees, paths, bushes
+        this.placeForest();
+
+        // links
+        // const githubButton = this.placeImage(0, -2, "github");
+        // githubButton.setInteractive();
+        // githubButton.on("pointerdown", () => {
+        //     window.open("https://github.com/andrewahn-ubc", "_blank"); // Open link in new tab
+        // });
+
+        // roads
+        // this.placePath(0, 0, 10, "v");
+    }
+
+    // takes in relative coordinates and outputs real coordinates
+    realCoord(relativeX: integer, relativeY: integer) {
+        const realX = this.centerX + relativeX * this.cellWidth;
+        const realY = this.centerY + relativeY * this.cellHeight;
+        return [realX, realY];
+    }
+
+    // takes in real coordinates and outputs relative coordinates
+    relativeCoord(realX: integer, realY: integer) {
+        const relativeX = Math.floor((realX - this.centerX)/this.cellWidth);
+        const relativeY = Math.floor((realY - this.centerY)/this.cellHeight);
+        return [relativeX, relativeY];
+    }
+
+    placeImage(relativeX: integer, relativeY: integer, assetName: string) {
+        const realCoords = this.realCoord(relativeX, relativeY);
+        const image = this.add.image(realCoords[0], realCoords[1], assetName);
+        return image;
+    }
+
     placeForest() {
         // perimeter
         this.placeTrees([-40,-40,40,-20]);
@@ -236,12 +227,19 @@ export default class GameScene extends Phaser.Scene {
         this.placeTrees(this.rotate(this.rotate(this.rotate([-20,-9,-18,-4]))));
         this.placeTrees(this.rotate(this.rotate(this.rotate([-10,-20,-4,-18]))));
         this.placeTrees(this.rotate(this.rotate(this.rotate([-16,-16,-13,-13]))));
+    }
 
-        // title
-        this.placeTrees([-9,-5,10,-4]);
-        this.placeTrees([-9,2,10,3]);
-        this.placeTrees([-9,-5,-8,3]);
-        this.placeTrees([9,-4,10,3]);
+    // place a straight path (either horizontal or vertical) given relative coordinates
+    placePath(startX: integer, startY: integer, length: integer, direction: string) {
+        if (direction === "h") {
+            for (let i = 0; i < length; i++) {
+                this.placeImage(startX + i, startY, "path-hor");
+            }
+        } else if (direction === "v") {
+            for (let i = 0; i < length; i++) {
+                this.placeImage(startX, startY + i, "path-ver");
+            }
+        }
     }
 
     // given two coordinates in the form [x1, y1, x2, y2], return a version rotated by 90 degrees clockwise 
@@ -264,9 +262,7 @@ export default class GameScene extends Phaser.Scene {
         return coordinates;
     }
 
-    // imagining the background as a dimension x dimension matrix, 
-    // place trees starting at index (startX, startY) and ending at (endX, endY)
-    // input coordinates are in our grid coordinates, not the actual coordinates
+    // place trees in a rectangle starting at index (startX, startY) and ending at (endX, endY), in relative coordinates
     placeTrees(coordinates: integer[]) {
         const startX = coordinates[0];
         const startY = coordinates[1];
@@ -274,22 +270,52 @@ export default class GameScene extends Phaser.Scene {
         const endY = coordinates[3];
 
         if (startX >= endX || startY >= endY || 
-            startX < this.centerX - this.bgWidth/2 || 
-            startY < this.centerY - this.bgHeight/2) {
+            startX < -this.dimension/2 || 
+            startY < -this.dimension/2 ||
+            endX > this.dimension/2 ||
+            endY > this.dimension/2) {
             console.log("dimensions are messed up lowkey");
             return
         }
 
-        const startX_coord = this.centerX + startX * this.cellWidth
-        const startY_coord = this.centerY + startY * this.cellHeight
-        const endX_coord = this.centerX + endX * this.cellWidth
-        const endY_coord = this.centerY + endY * this.cellHeight
-
-        for (let i = startX_coord; i < endX_coord; i += this.cellWidth) {
-            for (let j = startY_coord; j < endY_coord; j += this.cellHeight) {
-                this.add.image(i, j, "tree");
+        for (let i = startX; i < endX; i++) {
+            for (let j = startY; j < endY; j++) {
+                this.placeImage(i, j, "tree");
             }
         }
+    }
+
+    createAnims() {
+        this.anims.create({
+            key: "left",
+            frames: this.anims.generateFrameNumbers('player', { start: 4, end: 7 }),
+            frameRate: 10,
+            repeat: -1
+        });
+        this.anims.create({
+            key: "right",
+            frames: this.anims.generateFrameNumbers('player', { start: 8, end: 11 }),
+            frameRate: 10,
+            repeat: -1
+        });  
+        this.anims.create({
+            key: "down",
+            frames: this.anims.generateFrameNumbers('player', { start: 0, end: 3 }),
+            frameRate: 10,
+            repeat: -1
+        });
+        this.anims.create({
+            key: "up",
+            frames: this.anims.generateFrameNumbers('player', { start: 12, end: 15 }),
+            frameRate: 10,
+            repeat: -1
+        });
+        this.anims.create({
+            key: "still",
+            frames: [{key: "player", frame: 0}],
+            frameRate: 10,
+            repeat: -1
+        });
     }
 
     stopMoving() {
@@ -405,7 +431,7 @@ export default class GameScene extends Phaser.Scene {
                 break;
         }
     
-      }
+    }
 
     startMoving(direction: string) {
         if (this.moveEvent) return;
