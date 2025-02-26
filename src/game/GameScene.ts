@@ -50,7 +50,7 @@ export default class GameScene extends Phaser.Scene {
         this.cellWidth = this.bgWidth / this.dimension;
         this.cellHeight = this.bgHeight / this.dimension;
         // trees, paths, bushes
-        this.placeTrees(-20,-20,0,0);
+        this.placeForest();
         this.add.image(window.innerWidth/2 + 250, window.innerHeight/2 + 200, "bush");
         this.add.image(window.innerWidth/2 + 300, window.innerHeight/2 + 200, "path-ver");
         this.add.image(window.innerWidth/2 + 350, window.innerHeight/2 + 200, "path-hor");
@@ -88,7 +88,7 @@ export default class GameScene extends Phaser.Scene {
             window.open("https://github.com/andrewahn-ubc", "_blank"); // Open link in new tab
         });
         // welcome
-        this.add.text(window.innerWidth/2 - 400, window.innerHeight/2 - 200, 'Hey, welcome to my website!', { fontSize: '50px', fill: '#000' });
+        this.add.text(window.innerWidth/2 - 8*this.cellHeight, window.innerHeight/2 - 4*this.cellWidth, 'Hey, welcome to my website!', { fontSize: '50px', fill: '#000' });
 
         // bounding player within background
         this.physics.world.setBounds(
@@ -135,6 +135,17 @@ export default class GameScene extends Phaser.Scene {
         if (this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.MINUS).isDown) {
             this.cameras.main.setZoom(Phaser.Math.Clamp(this.cameras.main.zoom - 0.03, 0.1, 2));
         }
+    }
+
+    placeForest() {
+        // perimeter
+        this.placeTrees(-40,-40,40,-20);
+        this.placeTrees(-40,20,40,40);
+        this.placeTrees(-40,-20,-20,20);
+        this.placeTrees(20,-20,40,20);
+
+        // title
+        this.placeTrees(-9,-5,10,-4);
     }
 
     // imagining the background as a dimension x dimension matrix, 
