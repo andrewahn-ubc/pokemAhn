@@ -13,6 +13,9 @@ const Game: React.FC = () => {
       parent: gameRef.current || undefined,
       physics: { default: "arcade", arcade: { gravity: { x: 0, y: 0 } } },
       scene: GameScene,
+      audio: {
+        disableWebAudio: false  // Ensure WebAudio is enabled
+    }
     };
 
     const game = new Phaser.Game(config);
