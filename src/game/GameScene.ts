@@ -27,7 +27,7 @@ export default class GameScene extends Phaser.Scene {
     // music
     private backgroundMusic!: Phaser.Sound.BaseSound;
     // character movement
-    private delay = 75; // 200 is optimal
+    private delay = 200; // 200 is optimal
 
     // initialize our scene
 
@@ -44,12 +44,17 @@ export default class GameScene extends Phaser.Scene {
         this.load.image("tree", "/assets/tree.png");
         this.load.image("bush", "/assets/bush.png");
         // paths
-        this.load.image("path-ver", "/assets/path_ver.png");
-        this.load.image("path-hor", "/assets/path_hor.png");
-        this.load.image("path-tr", "/assets/path_tr.png");
-        this.load.image("path-tl", "/assets/path_tl.png");
-        this.load.image("path-bl", "/assets/path_bl.png");
-        this.load.image("path-br", "/assets/path_br.png");
+        this.load.image("path-ver", "/assets/paths/path_ver.png");
+        this.load.image("path-hor", "/assets/paths/path_hor.png");
+        this.load.image("path-tr", "/assets/paths/path_tr.png");
+        this.load.image("path-tl", "/assets/paths/path_tl.png");
+        this.load.image("path-bl", "/assets/paths/path_bl.png");
+        this.load.image("path-br", "/assets/paths/path_br.png");
+        this.load.image("path-3-up", "/assets/paths/path_3_up.png");
+        this.load.image("path-3-down", "/assets/paths/path_3_down.png");
+        this.load.image("path-3-right", "/assets/paths/path_3_right.png");
+        this.load.image("path-3-left", "/assets/paths/path_3_left.png");
+        this.load.image("path-4", "/assets/paths/path_4.png");
         // music
         this.load.audio('bgMusic', 'assets/audio/intro.mp3');
     }
@@ -143,7 +148,7 @@ export default class GameScene extends Phaser.Scene {
     setUpWorld() {
         // background
         this.centerX = window.innerWidth/2 - 1;
-        this.centerY = window.innerHeight/2 - 12;
+        this.centerY = window.innerHeight/2 + 12;
         this.bg = this.add.image(this.centerX, this.centerY, "background");
         this.bgWidth = this.bg.width;
         this.bgHeight = this.bg.height;
@@ -240,6 +245,17 @@ export default class GameScene extends Phaser.Scene {
         this.placePath(-10, -8, 8, "v");
         this.placePath(9, -8, 8, "v");
         this.placePath(-10, -9, 20, "h");
+        // corners
+        this.placeImage(-10,-9,"path-tl");
+        this.placeImage(9,-9,"path-tr");
+        // intersections
+        this.placeImage(-10, 0, "path-3-up")
+        this.placeImage(-5, -9, "path-3-up")
+        this.placeImage(4, -9, "path-3-up")
+        this.placeImage(9, 0, "path-3-up")
+        this.placeImage(0, 0, "path-3-down")
+        this.placeImage(0, 7, "path-4")
+        this.placeImage(0, 12, "path-4")
         
         this.placePath(-5, -13, 4, "v"); // top left vertical
         this.placePath(4, -13, 4, "v"); // top right vertical
