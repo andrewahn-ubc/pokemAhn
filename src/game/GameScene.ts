@@ -170,7 +170,7 @@ export default class GameScene extends Phaser.Scene {
         // });
 
         // roads
-        // this.placePath(0, 0, 10, "v");
+        this.placeRoads();
     }
 
     // takes in relative coordinates and outputs real coordinates
@@ -227,6 +227,22 @@ export default class GameScene extends Phaser.Scene {
         this.placeTrees(this.rotate(this.rotate(this.rotate([-20,-9,-18,-4]))));
         this.placeTrees(this.rotate(this.rotate(this.rotate([-10,-20,-4,-18]))));
         this.placeTrees(this.rotate(this.rotate(this.rotate([-16,-16,-13,-13]))));
+    }
+
+    placeRoads() {
+        this.placePath(0, 0, 15, "v"); // bottom middle vertical
+
+        this.placePath(-7, 7, 15, "h"); // bottom upper horizontal
+        this.placePath(-5, 12, 11, "h"); // bottom lower horizontal
+
+        // rectangle
+        this.placePath(-13, 0, 26, "h");
+        this.placePath(-10, -8, 8, "v");
+        this.placePath(9, -8, 8, "v");
+        this.placePath(-10, -9, 20, "h");
+        
+        this.placePath(-5, -13, 4, "v"); // top left vertical
+        this.placePath(4, -13, 4, "v"); // top right vertical
     }
 
     // place a straight path (either horizontal or vertical) given relative coordinates
