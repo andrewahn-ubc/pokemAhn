@@ -1,13 +1,18 @@
 import Phaser from "phaser";
 
 export default class GameScene extends Phaser.Scene {
+    private bg!: Phaser.GameObjects.Image;
     private player!: Phaser.Physics.Arcade.Sprite;
+    // keys
     private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
+    private spaceKey!: Phaser.Input.Keyboard.Key;
+    private arrows: string[] = [];
+    // background dimensions
     private bgWidth!: integer;
     private bgHeight!: integer;
+    // for displaying the coordinates
     private xCoord!: Phaser.GameObjects.Text;
     private yCoord!: Phaser.GameObjects.Text;
-    private bg!: Phaser.GameObjects.Image;
     // the background is divided into a n x n grid full of cells
     private dimension = 80;
     private cellWidth!: integer;
@@ -21,12 +26,14 @@ export default class GameScene extends Phaser.Scene {
     private centerY!: integer;
     // music
     private backgroundMusic!: Phaser.Sound.BaseSound;
-    private spaceKey!: Phaser.Input.Keyboard.Key;
 
+    // initialize our scene
 
     constructor() {
         super("GameScene");
     }
+
+    // load the assets
 
     preload() {
         this.load.image("background", "/assets/bg.png");
@@ -44,6 +51,9 @@ export default class GameScene extends Phaser.Scene {
         // music
         this.load.audio('bgMusic', 'assets/audio/intro.mp3');
     }
+
+
+    // set up the scene!
 
     create() {
         // background
@@ -74,35 +84,35 @@ export default class GameScene extends Phaser.Scene {
         this.add.text(window.innerWidth/2 - 8*this.cellHeight, window.innerHeight/2 - 4*this.cellWidth, 'Hey, welcome to my website!', { fontSize: '50px', fill: '#000' });
         // character
         this.player = this.physics.add.sprite(window.innerWidth/2, window.innerHeight/2, "player");
-        // character frames
+        // character animations
         this.anims.create({
             key: "left",
             frames: this.anims.generateFrameNumbers('player', { start: 4, end: 7 }),
-            frameRate: 7,
+            frameRate: 10,
             repeat: -1
         });
         this.anims.create({
             key: "right",
             frames: this.anims.generateFrameNumbers('player', { start: 8, end: 11 }),
-            frameRate: 7,
+            frameRate: 10,
             repeat: -1
         });  
         this.anims.create({
             key: "down",
             frames: this.anims.generateFrameNumbers('player', { start: 0, end: 3 }),
-            frameRate: 7,
+            frameRate: 10,
             repeat: -1
         });
         this.anims.create({
             key: "up",
             frames: this.anims.generateFrameNumbers('player', { start: 12, end: 15 }),
-            frameRate: 7,
+            frameRate: 10,
             repeat: -1
         });
         this.anims.create({
             key: "still",
             frames: [{key: "player", frame: 0}],
-            frameRate: 7,
+            frameRate: 10,
             repeat: -1
         });
         // coordinates
@@ -150,17 +160,25 @@ export default class GameScene extends Phaser.Scene {
 
         // handle initial arrow click (without this section, there's a pause before player moves)
         if (Phaser.Input.Keyboard.JustDown(this.cursors.right)) {
-            this.player.anims.play('right')
+            this.stopMoving();
             this.moveCharacter('right')
+            this.arrows.shift()
+            this.arrows.push("right")
         } else if (Phaser.Input.Keyboard.JustDown(this.cursors.left)) {
-            this.player.anims.play('left')
+            this.stopMoving();
             this.moveCharacter('left')
+            this.arrows.shift()
+            this.arrows.push("left")
         } else if (Phaser.Input.Keyboard.JustDown(this.cursors.up)) {
-            this.player.anims.play('up')
+            this.stopMoving();
             this.moveCharacter('up')
+            this.arrows.shift()
+            this.arrows.push("up")
         } else if (Phaser.Input.Keyboard.JustDown(this.cursors.down)) {
-            this.player.anims.play('down')
+            this.stopMoving();
             this.moveCharacter('down')
+            this.arrows.shift()
+            this.arrows.push("down")
         }
 
         // handle arrow key "press-and-hold"
@@ -219,13 +237,26 @@ export default class GameScene extends Phaser.Scene {
 
     // helper for deciding how player should move
     handleMovement() {
-        if (this.cursors.left.isDown) {
+        if (this.arrows[0] == 'left' && !this.cursors.left.isDown) {
+            this.arrows.shift();
+        }
+        if (this.arrows[0] == 'right' && !this.cursors.right.isDown) {
+            this.arrows.shift();
+        }
+        if (this.arrows[0] == 'up' && !this.cursors.up.isDown) {
+            this.arrows.shift();
+        }
+        if (this.arrows[0] == 'down' && !this.cursors.down.isDown) {
+            this.arrows.shift();
+        }
+
+        if (this.arrows[0] == 'left') {
             this.startMoving('left')
-        } else if (this.cursors.right.isDown) {
+        } else if (this.arrows[0] == 'right') {
             this.startMoving('right')
-        } else if (this.cursors.up.isDown) {
+        } else if (this.arrows[0] == 'up') {
             this.startMoving('up')
-        } else if (this.cursors.down.isDown) {
+        } else if (this.arrows[0] == 'down') {
             this.startMoving('down')
         } else {
             this.stopMoving();
@@ -247,12 +278,15 @@ export default class GameScene extends Phaser.Scene {
                     duration: 200,         
                     ease: 'Linear',        
                     repeat: 0,             
-                    yoyo: false
+                    yoyo: false,
+                    onStart: () => {
+                        this.player.anims.play('left');
+                    }
                 });
                 break;
             case "right":
                 if (this.player.x + 50 >= this.bgWidth/2) {
-                    console.log("player out of bounds")
+                    console.log("player out of bounds");
                     return
                 }
                 this.numHor += 1
@@ -262,7 +296,10 @@ export default class GameScene extends Phaser.Scene {
                     duration: 200,         
                     ease: 'Linear',        
                     repeat: 0,             
-                    yoyo: false     
+                    yoyo: false,
+                    onStart: () => {
+                        this.player.anims.play('right');
+                    }   
                 });
                 break;
             case "up":
@@ -277,7 +314,10 @@ export default class GameScene extends Phaser.Scene {
                     duration: 200,         
                     ease: 'Linear',        
                     repeat: 0,             
-                    yoyo: false   
+                    yoyo: false,
+                    onStart: () => {
+                        this.player.anims.play('up');
+                    } 
                 });
                 break;
             case "down":
@@ -292,7 +332,10 @@ export default class GameScene extends Phaser.Scene {
                     duration: 200,         
                     ease: 'Linear',        
                     repeat: 0,             
-                    yoyo: false 
+                    yoyo: false,
+                    onStart: () => {
+                        this.player.anims.play('down');
+                    } 
                 });
                 break;
         }
