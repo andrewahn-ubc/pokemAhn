@@ -7,10 +7,11 @@ Inspired by old-school Nintendo Pokemon games ^-^ Built using Phaser 3, React, a
 🚧 Currently Under Construction 🚧
 
 # TODO
-- make the player collide with important objects
+- include path corners and intersections
+- populate the scene with houses, bushes, NPCs, rocks, flowers, and signs
 - create elements that generate a popup when the user is within a certain distance and presses a button
-- create the background, player spritesheet, and other images (bushes, buildings, road, etc.)
-- populate the scene with images at the correct locations
+- make the player collide with certain objects, like buildings, NPCs, and rocks
+- if the player stops moving right facing a non-down direction, make them stand still in that direction
 
 ## Progress
 Day 1: 
