@@ -3,22 +3,22 @@ import Phaser from "phaser";
 export default class GameScene extends Phaser.Scene {
     private player!: Phaser.Physics.Arcade.Sprite;
     private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
-    private bgWidth = 2370; // Width of your background image (for some reason, it's half the actual width (actual: 4000))
-    private bgHeight = 2370; // Height of your background image (for some reason, it's half the actual height (actual: 4000))
+    private bgWidth!: integer;
+    private bgHeight!: integer;
     private xCoord!: Phaser.GameObjects.Text;
     private yCoord!: Phaser.GameObjects.Text;
     private bg!: Phaser.GameObjects.Image;
     // the background is divided into a n x n grid full of cells
     private dimension = 80;
-    private cellWidth = 0;
-    private cellHeight = 0; 
+    private cellWidth!: integer;
+    private cellHeight!: integer; 
     // number of moves made in the horizontal and vertical directions (right and bottom are +ve)
     private numHor = 0;
     private numVer = 0;
     private moveEvent: Phaser.Time.TimerEvent | null = null;
     // "center" coordinates (because (0,0) isn't really the "center" of this scene)
-    private centerX = 0;
-    private centerY = 0;
+    private centerX!: integer;
+    private centerY!: integer;
 
     constructor() {
         super("GameScene");
@@ -188,17 +188,6 @@ export default class GameScene extends Phaser.Scene {
 
     // helper for actually moving the player
     moveCharacter(direction: string) {
-    // -this.bgWidth/2 + window.innerWidth, 
-    //     -this.bgHeight/2 + window.innerHeight, 
-    //     this.bgWidth - window.innerWidth, 
-    //     this.bgHeight - window.innerHeight
-        // console.log("player x: ", this.player.x)
-        // console.log('margin: ', -this.bgHeight/2 + window.innerHeight)
-        // console.log('# horizontal steps: ', this.numHor)
-        // if (-this.bgWidth/2 + window.innerWidth >= this.player.x || this.player.x >= this.bgWidth/2 - window.innerWidth) {
-        //     console.log("player out of bounds")
-        //     return
-        // }
         switch (direction) {
             case "left":
                 if (this.player.x - 50 < -this.bgWidth/2 + window.innerWidth) {
