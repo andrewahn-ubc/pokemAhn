@@ -166,6 +166,8 @@ export default class GameScene extends Phaser.Scene {
 
         // trees, paths, bushes
         this.placeForest();
+        this.placeRoads();
+        this.placeBushes();
 
         // links
         // const githubButton = this.placeImage(0, -2, "github");
@@ -173,9 +175,6 @@ export default class GameScene extends Phaser.Scene {
         // githubButton.on("pointerdown", () => {
         //     window.open("https://github.com/andrewahn-ubc", "_blank"); // Open link in new tab
         // });
-
-        // roads
-        this.placeRoads();
     }
 
     // takes in relative coordinates and outputs real coordinates
@@ -200,38 +199,38 @@ export default class GameScene extends Phaser.Scene {
 
     placeForest() {
         // perimeter
-        this.placeTrees([-40,-40,40,-20]);
-        this.placeTrees([-40,20,40,40]);
-        this.placeTrees([-40,-20,-20,20]);
-        this.placeTrees([20,-20,40,20]);
+        this.placeGroup([-40,-40,40,-20], "tree");
+        this.placeGroup([-40,20,40,40], "tree");
+        this.placeGroup([-40,-20,-20,20], "tree");
+        this.placeGroup([20,-20,40,20], "tree");
         // smoothing
-        this.placeTrees([-20,-20,-14,-14]);
-        this.placeTrees([-14,-20,-10,-16]);
-        this.placeTrees([-20,-14,-16,-9]);
-        this.placeTrees([-20,-9,-18,-4]);
-        this.placeTrees([-10,-20,-4,-18]);
-        this.placeTrees([-16,-16,-13,-13]);
+        this.placeGroup([-20,-20,-14,-14], "tree");
+        this.placeGroup([-14,-20,-10,-16], "tree");
+        this.placeGroup([-20,-14,-16,-9], "tree");
+        this.placeGroup([-20,-9,-18,-4], "tree");
+        this.placeGroup([-10,-20,-4,-18], "tree");
+        this.placeGroup([-16,-16,-13,-13], "tree");
 
-        this.placeTrees(this.rotate([-20,-20,-14,-14]));
-        this.placeTrees(this.rotate([-14,-20,-10,-16]));
-        this.placeTrees(this.rotate([-20,-14,-16,-9]));
-        this.placeTrees(this.rotate([-20,-9,-18,-4]));
-        this.placeTrees(this.rotate([-10,-20,-4,-18]));
-        this.placeTrees(this.rotate([-16,-16,-13,-13]));
+        this.placeGroup(this.rotate([-20,-20,-14,-14]), "tree");
+        this.placeGroup(this.rotate([-14,-20,-10,-16]), "tree");
+        this.placeGroup(this.rotate([-20,-14,-16,-9]), "tree");
+        this.placeGroup(this.rotate([-20,-9,-18,-4]), "tree");
+        this.placeGroup(this.rotate([-10,-20,-4,-18]), "tree");
+        this.placeGroup(this.rotate([-16,-16,-13,-13]), "tree");
 
-        this.placeTrees(this.rotate(this.rotate([-20,-20,-14,-14])));
-        this.placeTrees(this.rotate(this.rotate([-14,-20,-10,-16])));
-        this.placeTrees(this.rotate(this.rotate([-20,-14,-16,-9])));
-        this.placeTrees(this.rotate(this.rotate([-20,-9,-18,-4])));
-        this.placeTrees(this.rotate(this.rotate([-10,-20,-4,-18])));
-        this.placeTrees(this.rotate(this.rotate([-16,-16,-13,-13])));
+        this.placeGroup(this.rotate(this.rotate([-20,-20,-14,-14])), "tree");
+        this.placeGroup(this.rotate(this.rotate([-14,-20,-10,-16])), "tree");
+        this.placeGroup(this.rotate(this.rotate([-20,-14,-16,-9])), "tree");
+        this.placeGroup(this.rotate(this.rotate([-20,-9,-18,-4])), "tree");
+        this.placeGroup(this.rotate(this.rotate([-10,-20,-4,-18])), "tree");
+        this.placeGroup(this.rotate(this.rotate([-16,-16,-13,-13])), "tree");
 
-        this.placeTrees(this.rotate(this.rotate(this.rotate([-20,-20,-14,-14]))));
-        this.placeTrees(this.rotate(this.rotate(this.rotate([-14,-20,-10,-16]))));
-        this.placeTrees(this.rotate(this.rotate(this.rotate([-20,-14,-16,-9]))));
-        this.placeTrees(this.rotate(this.rotate(this.rotate([-20,-9,-18,-4]))));
-        this.placeTrees(this.rotate(this.rotate(this.rotate([-10,-20,-4,-18]))));
-        this.placeTrees(this.rotate(this.rotate(this.rotate([-16,-16,-13,-13]))));
+        this.placeGroup(this.rotate(this.rotate(this.rotate([-20,-20,-14,-14]))), "tree");
+        this.placeGroup(this.rotate(this.rotate(this.rotate([-14,-20,-10,-16]))), "tree");
+        this.placeGroup(this.rotate(this.rotate(this.rotate([-20,-14,-16,-9]))), "tree");
+        this.placeGroup(this.rotate(this.rotate(this.rotate([-20,-9,-18,-4]))), "tree");
+        this.placeGroup(this.rotate(this.rotate(this.rotate([-10,-20,-4,-18]))), "tree");
+        this.placeGroup(this.rotate(this.rotate(this.rotate([-16,-16,-13,-13]))), "tree");
     }
 
     placeRoads() {
@@ -259,6 +258,10 @@ export default class GameScene extends Phaser.Scene {
         
         this.placePath(-5, -13, 4, "v"); // top left vertical
         this.placePath(4, -13, 4, "v"); // top right vertical
+    }
+
+    placeBushes() {
+        this.placeGroup([0,0,2,2], "bush");
     }
 
     // place a straight path (either horizontal or vertical) given relative coordinates
@@ -295,7 +298,7 @@ export default class GameScene extends Phaser.Scene {
     }
 
     // place trees in a rectangle starting at index (startX, startY) and ending at (endX, endY), in relative coordinates
-    placeTrees(coordinates: integer[]) {
+    placeGroup(coordinates: integer[], object: string) {
         const startX = coordinates[0];
         const startY = coordinates[1];
         const endX = coordinates[2];
@@ -312,7 +315,7 @@ export default class GameScene extends Phaser.Scene {
 
         for (let i = startX; i < endX; i++) {
             for (let j = startY; j < endY; j++) {
-                this.placeImage(i, j, "tree");
+                this.placeImage(i, j, object);
             }
         }
     }
