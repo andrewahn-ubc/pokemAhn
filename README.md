@@ -7,7 +7,6 @@ Inspired by old-school Nintendo Pokemon games ^-^ Built using Phaser 3, React, a
 🚧 Currently Under Construction 🚧
 
 # TODO
-- include path corners and intersections
 - populate the scene with houses, bushes, NPCs, rocks, flowers, and signs
 - create elements that generate a popup when the user is within a certain distance and presses a button
 - make the player collide with certain objects, like buildings, NPCs, and rocks
