@@ -12,7 +12,13 @@ export default class GameScene extends Phaser.Scene {
   private dimension = 40;
   private cellWidth = 0;
   private cellHeight = 0; 
+  // number of moves made in the horizontal and vertical directions (right and bottom are +ve)
+  private numHor = 0;
+  private numVer = 0;
   private moveEvent: Phaser.Time.TimerEvent | null = null;
+  // initial player coordinates
+  private initPlayerX = 0;
+  private initPlayerY = 0;
 
   constructor() {
     super("GameScene");
@@ -31,6 +37,8 @@ export default class GameScene extends Phaser.Scene {
     this.bgWidth = this.bg.width;
     this.bgHeight = this.bg.height;
     this.player = this.physics.add.sprite(window.innerWidth/2, window.innerHeight/2, "player");
+    this.initPlayerX = window.innerWidth/2;
+    this.initPlayerY = window.innerHeight/2;
     // set cell dimensions
     this.cellWidth = this.bgWidth / this.dimension;
     this.cellHeight = this.bgHeight / this.dimension;
@@ -94,17 +102,11 @@ export default class GameScene extends Phaser.Scene {
 
     if (Phaser.Input.Keyboard.JustDown(this.cursors.right)) {
         this.moveCharacter('right')
-    }
-
-    if (Phaser.Input.Keyboard.JustDown(this.cursors.left)) {
+    } else if (Phaser.Input.Keyboard.JustDown(this.cursors.left)) {
         this.moveCharacter('left')
-    }
-
-    if (Phaser.Input.Keyboard.JustDown(this.cursors.up)) {
+    } else if (Phaser.Input.Keyboard.JustDown(this.cursors.up)) {
         this.moveCharacter('up')
-    }
-
-    if (Phaser.Input.Keyboard.JustDown(this.cursors.down)) {
+    } else if (Phaser.Input.Keyboard.JustDown(this.cursors.down)) {
         this.moveCharacter('down')
     }
 
@@ -139,43 +141,47 @@ export default class GameScene extends Phaser.Scene {
     moveCharacter(direction: string) {
         switch (direction) {
             case "left":
+                this.numHor -= 1;
                 this.tweens.add({
                     targets: this.player,  
-                    x: this.player.x - this.cellWidth, 
+                    x: this.initPlayerX + this.numHor * this.cellWidth, 
                     duration: 200,         
                     ease: 'Linear',        
                     repeat: 0,             
-                    yoyo: false            
+                    yoyo: false
                 });
                 break;
             case "right":
+                this.numHor += 1
                 this.tweens.add({
                     targets: this.player,  
-                    x: this.player.x + this.cellWidth, 
+                    x: this.initPlayerX + this.numHor * this.cellWidth, 
                     duration: 200,         
                     ease: 'Linear',        
                     repeat: 0,             
-                    yoyo: false            
+                    yoyo: false     
                 });
                 break;
             case "up":
+                this.numVer -= 1;
                 this.tweens.add({
                     targets: this.player,  
-                    y: this.player.y - this.cellHeight, 
+                    y: this.initPlayerY + this.numVer * this.cellHeight, 
                     duration: 200,         
                     ease: 'Linear',        
                     repeat: 0,             
-                    yoyo: false            
+                    yoyo: false   
                 });
                 break;
             case "down":
+                this.numVer += 1;
                 this.tweens.add({
                     targets: this.player,  
-                    y: this.player.y + this.cellHeight, 
+                    y: this.initPlayerY + this.numVer * this.cellHeight, 
                     duration: 200,         
                     ease: 'Linear',        
                     repeat: 0,             
-                    yoyo: false            
+                    yoyo: false 
                 });
                 break;
         }
