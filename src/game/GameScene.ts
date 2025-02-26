@@ -204,22 +204,75 @@ export default class GameScene extends Phaser.Scene {
 
     placeForest() {
         // perimeter
-        this.placeTrees(-40,-40,40,-20);
-        this.placeTrees(-40,20,40,40);
-        this.placeTrees(-40,-20,-20,20);
-        this.placeTrees(20,-20,40,20);
+        this.placeTrees([-40,-40,40,-20]);
+        this.placeTrees([-40,20,40,40]);
+        this.placeTrees([-40,-20,-20,20]);
+        this.placeTrees([20,-20,40,20]);
+        // smoothing
+        this.placeTrees([-20,-20,-14,-14]);
+        this.placeTrees([-14,-20,-10,-16]);
+        this.placeTrees([-20,-14,-16,-9]);
+        this.placeTrees([-20,-9,-18,-4]);
+        this.placeTrees([-10,-20,-4,-18]);
+        this.placeTrees([-16,-16,-13,-13]);
+
+        this.placeTrees(this.rotate([-20,-20,-14,-14]));
+        this.placeTrees(this.rotate([-14,-20,-10,-16]));
+        this.placeTrees(this.rotate([-20,-14,-16,-9]));
+        this.placeTrees(this.rotate([-20,-9,-18,-4]));
+        this.placeTrees(this.rotate([-10,-20,-4,-18]));
+        this.placeTrees(this.rotate([-16,-16,-13,-13]));
+
+        this.placeTrees(this.rotate(this.rotate([-20,-20,-14,-14])));
+        this.placeTrees(this.rotate(this.rotate([-14,-20,-10,-16])));
+        this.placeTrees(this.rotate(this.rotate([-20,-14,-16,-9])));
+        this.placeTrees(this.rotate(this.rotate([-20,-9,-18,-4])));
+        this.placeTrees(this.rotate(this.rotate([-10,-20,-4,-18])));
+        this.placeTrees(this.rotate(this.rotate([-16,-16,-13,-13])));
+
+        this.placeTrees(this.rotate(this.rotate(this.rotate([-20,-20,-14,-14]))));
+        this.placeTrees(this.rotate(this.rotate(this.rotate([-14,-20,-10,-16]))));
+        this.placeTrees(this.rotate(this.rotate(this.rotate([-20,-14,-16,-9]))));
+        this.placeTrees(this.rotate(this.rotate(this.rotate([-20,-9,-18,-4]))));
+        this.placeTrees(this.rotate(this.rotate(this.rotate([-10,-20,-4,-18]))));
+        this.placeTrees(this.rotate(this.rotate(this.rotate([-16,-16,-13,-13]))));
 
         // title
-        this.placeTrees(-9,-5,10,-4);
-        this.placeTrees(-9,2,10,3);
-        this.placeTrees(-9,-5,-8,3);
-        this.placeTrees(9,-4,10,3);
+        this.placeTrees([-9,-5,10,-4]);
+        this.placeTrees([-9,2,10,3]);
+        this.placeTrees([-9,-5,-8,3]);
+        this.placeTrees([9,-4,10,3]);
+    }
+
+    // given two coordinates in the form [x1, y1, x2, y2], return a version rotated by 90 degrees clockwise 
+    rotate(coordinates: integer[]) {
+        const x1 = coordinates[0];
+        const y1 = coordinates[1];
+        const x2 = coordinates[2];
+        const y2 = coordinates[3];
+
+        // multiplies each coordinate by the rotation matrix
+        // [0 -1]
+        // [1, 0]
+        // then adjusts coordinates to ensure we're passing the top left and bottom right corner of the desired forest
+        // (without this adjustment, we would return the top right and bottom left corner, due to rotation)
+        coordinates[0] = -y2;
+        coordinates[1] = x1;
+        coordinates[2] = -y1;
+        coordinates[3] = x2;
+
+        return coordinates;
     }
 
     // imagining the background as a dimension x dimension matrix, 
     // place trees starting at index (startX, startY) and ending at (endX, endY)
     // input coordinates are in our grid coordinates, not the actual coordinates
-    placeTrees(startX: integer, startY: integer, endX: integer, endY: integer) {
+    placeTrees(coordinates: integer[]) {
+        const startX = coordinates[0];
+        const startY = coordinates[1];
+        const endX = coordinates[2];
+        const endY = coordinates[3];
+
         if (startX >= endX || startY >= endY || 
             startX < this.centerX - this.bgWidth/2 || 
             startY < this.centerY - this.bgHeight/2) {
