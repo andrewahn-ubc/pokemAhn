@@ -16,6 +16,7 @@ Legend:
 
 
 # TODO
+- take care of more edge cases for path generation (the one where 3 sides and 1 corner are path)
 - populate the scene with houses, bushes, NPCs, rocks, flowers, and signs
 - create elements that can generate popups
 - implement collision detection
