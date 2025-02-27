@@ -58,6 +58,9 @@ export default class GameScene extends Phaser.Scene {
         this.load.image("path-3-right", "/assets/paths/path_3_right.png");
         this.load.image("path-3-left", "/assets/paths/path_3_left.png");
         this.load.image("path-4", "/assets/paths/path_4.png");
+        // buildings
+        this.load.image("house-1", "/assets/house_1.png");
+        this.load.image("house-2", "/assets/house_2.png");
         // music
         this.load.audio('bgMusic', 'assets/audio/intro.mp3');
         this.load.audio('trap', 'assets/audio/trap.mp3');
@@ -73,7 +76,7 @@ export default class GameScene extends Phaser.Scene {
         // character
         this.playerCenterX = this.centerX;
         this.playerCenterY = this.centerY - 12;
-        this.player = this.physics.add.sprite(this.playerCenterX - 100, this.playerCenterY + 100, "player");
+        this.player = this.physics.add.sprite(this.playerCenterX, this.playerCenterY, "player");
         this.player.setCollideWorldBounds(true);
         this.physics.add.collider(this.player, this.environment);
 
@@ -90,9 +93,9 @@ export default class GameScene extends Phaser.Scene {
         // create map view
         const secondCamera = this.cameras.add(window.innerWidth - 4 * this.cellWidth, this.cellHeight, this.cellWidth * 3, this.cellHeight * 3); // (x, y, width, height)
         // Move camera to a specific position (x, y)
-        secondCamera.scrollX = this.centerX - 50; // Move horizontally
-        secondCamera.scrollY = this.centerY - 50; // Move vertically
-        secondCamera.setZoom(0.04); // Zoom out
+        secondCamera.scrollX = this.centerX - 100; // Move horizontally
+        secondCamera.scrollY = this.centerY - 90; // Move vertically
+        secondCamera.setZoom(0.07); // Zoom out
         secondCamera.setBackgroundColor(0x000000); // Black background
 
         // background music 
@@ -177,6 +180,7 @@ export default class GameScene extends Phaser.Scene {
         this.placeForest();
         this.placeRoads();
         this.placeBushes();
+        this.placeHouses();
 
         // links
         // const githubButton = this.placeImage(0, -2, "github");
@@ -280,6 +284,11 @@ export default class GameScene extends Phaser.Scene {
     placeBushes() {
         // this.placeGroup([1,1,5,5], "bush");
         return;
+    }
+
+    placeHouses() {
+        this.placeImage(-4.5, -14 , "house-1");
+        this.placeImage(4.6, -14 , "house-2");
     }
 
     // place a straight path (either horizontal or vertical) given relative coordinates
