@@ -3,6 +3,7 @@ import Phaser from "phaser";
 export default class GameScene extends Phaser.Scene {
     private bg!: Phaser.GameObjects.Image;
     private player!: Phaser.Physics.Arcade.Sprite;
+    private environment!: Phaser.Physics.Arcade.StaticGroup;
     // keys
     private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
     private spaceKey!: Phaser.Input.Keyboard.Key;
@@ -59,6 +60,7 @@ export default class GameScene extends Phaser.Scene {
         this.load.image("path-4", "/assets/paths/path_4.png");
         // music
         this.load.audio('bgMusic', 'assets/audio/intro.mp3');
+        this.load.audio('trap', 'assets/audio/trap.mp3');
     }
 
     // set up the scene!
@@ -66,12 +68,15 @@ export default class GameScene extends Phaser.Scene {
     create() {
         this.centerX = window.innerWidth/2;
         this.centerY = window.innerHeight/2;
+        this.environment = this.physics.add.staticGroup(); // create static group that the player will collide with
         this.setUpWorld();
         // character
         this.playerCenterX = this.centerX;
         this.playerCenterY = this.centerY - 12;
-        this.player = this.physics.add.sprite(this.playerCenterX, this.playerCenterY, "player");
+        this.player = this.physics.add.sprite(this.playerCenterX - 100, this.playerCenterY + 100, "player");
         this.player.setCollideWorldBounds(true);
+        this.physics.add.collider(this.player, this.environment);
+
         // character animations
         this.createAnims();
         // coordinates
@@ -91,7 +96,7 @@ export default class GameScene extends Phaser.Scene {
         secondCamera.setBackgroundColor(0x000000); // Black background
 
         // background music 
-        this.backgroundMusic = this.sound.add('bgMusic', {
+        this.backgroundMusic = this.sound.add('trap', {
             loop: true,  // Loop the music
             volume: 0.5  // Set volume (0.0 to 1.0)
         });
@@ -156,14 +161,14 @@ export default class GameScene extends Phaser.Scene {
         this.bg = this.add.image(this.centerX, this.centerY, "background");
         this.bgWidth = this.bg.width;
         this.bgHeight = this.bg.height;
-
+        
         // setting boundaries
         this.physics.world.setBounds(
             -this.bgWidth/2 + window.innerWidth, 
             -this.bgHeight/2 + window.innerHeight, 
             this.bgWidth - window.innerWidth, 
             this.bgHeight - window.innerHeight);
-
+    
         // set cell dimensions
         this.cellWidth = this.bgWidth / this.dimension;
         this.cellHeight = this.bgHeight / this.dimension;
@@ -201,40 +206,48 @@ export default class GameScene extends Phaser.Scene {
         return image;
     }
 
+    placeCollidableImage(relativeX: integer, relativeY: integer, assetName: string) {
+        const realCoords = this.realCoord(relativeX, relativeY);
+        const image = this.environment.create(realCoords[0], realCoords[1], assetName);
+        const body = image.body as Phaser.Physics.Arcade.Body;
+        body.setSize(image.width * 0.8, image.height * 0.8);
+        return image;
+    }
+
     placeForest() {
         // perimeter
-        this.placeGroup([-40,-40,40,-20], "tree");
-        this.placeGroup([-40,20,40,40], "tree");
-        this.placeGroup([-40,-20,-20,20], "tree");
-        this.placeGroup([20,-20,40,20], "tree");
+        this.placeGroup([-40,-40,40,-20], "tree", true);
+        this.placeGroup([-40,20,40,40], "tree", true);
+        this.placeGroup([-40,-20,-20,20], "tree", true);
+        this.placeGroup([20,-20,40,20], "tree", true);
         // smoothing
-        this.placeGroup([-20,-20,-14,-14], "tree");
-        this.placeGroup([-14,-20,-10,-16], "tree");
-        this.placeGroup([-20,-14,-16,-9], "tree");
-        this.placeGroup([-20,-9,-18,-4], "tree");
-        this.placeGroup([-10,-20,-4,-18], "tree");
-        this.placeGroup([-16,-16,-13,-13], "tree");
+        this.placeGroup([-20,-20,-14,-14], "tree", true);
+        this.placeGroup([-14,-20,-10,-16], "tree", true);
+        this.placeGroup([-20,-14,-16,-9], "tree", true);
+        this.placeGroup([-20,-9,-18,-4], "tree", true);
+        this.placeGroup([-10,-20,-4,-18], "tree", true);
+        this.placeGroup([-16,-16,-13,-13], "tree", true);
 
-        this.placeGroup(this.rotate([-20,-20,-14,-14]), "tree");
-        this.placeGroup(this.rotate([-14,-20,-10,-16]), "tree");
-        this.placeGroup(this.rotate([-20,-14,-16,-9]), "tree");
-        this.placeGroup(this.rotate([-20,-9,-18,-4]), "tree");
-        this.placeGroup(this.rotate([-10,-20,-4,-18]), "tree");
-        this.placeGroup(this.rotate([-16,-16,-13,-13]), "tree");
+        this.placeGroup(this.rotate([-20,-20,-14,-14]), "tree", true);
+        this.placeGroup(this.rotate([-14,-20,-10,-16]), "tree", true);
+        this.placeGroup(this.rotate([-20,-14,-16,-9]), "tree", true);
+        this.placeGroup(this.rotate([-20,-9,-18,-4]), "tree", true);
+        this.placeGroup(this.rotate([-10,-20,-4,-18]), "tree", true);
+        this.placeGroup(this.rotate([-16,-16,-13,-13]), "tree", true);
 
-        this.placeGroup(this.rotate(this.rotate([-20,-20,-14,-14])), "tree");
-        this.placeGroup(this.rotate(this.rotate([-14,-20,-10,-16])), "tree");
-        this.placeGroup(this.rotate(this.rotate([-20,-14,-16,-9])), "tree");
-        this.placeGroup(this.rotate(this.rotate([-20,-9,-18,-4])), "tree");
-        this.placeGroup(this.rotate(this.rotate([-10,-20,-4,-18])), "tree");
-        this.placeGroup(this.rotate(this.rotate([-16,-16,-13,-13])), "tree");
+        this.placeGroup(this.rotate(this.rotate([-20,-20,-14,-14])), "tree", true);
+        this.placeGroup(this.rotate(this.rotate([-14,-20,-10,-16])), "tree", true);
+        this.placeGroup(this.rotate(this.rotate([-20,-14,-16,-9])), "tree", true);
+        this.placeGroup(this.rotate(this.rotate([-20,-9,-18,-4])), "tree", true);
+        this.placeGroup(this.rotate(this.rotate([-10,-20,-4,-18])), "tree", true);
+        this.placeGroup(this.rotate(this.rotate([-16,-16,-13,-13])), "tree", true);
 
-        this.placeGroup(this.rotate(this.rotate(this.rotate([-20,-20,-14,-14]))), "tree");
-        this.placeGroup(this.rotate(this.rotate(this.rotate([-14,-20,-10,-16]))), "tree");
-        this.placeGroup(this.rotate(this.rotate(this.rotate([-20,-14,-16,-9]))), "tree");
-        this.placeGroup(this.rotate(this.rotate(this.rotate([-20,-9,-18,-4]))), "tree");
-        this.placeGroup(this.rotate(this.rotate(this.rotate([-10,-20,-4,-18]))), "tree");
-        this.placeGroup(this.rotate(this.rotate(this.rotate([-16,-16,-13,-13]))), "tree");
+        this.placeGroup(this.rotate(this.rotate(this.rotate([-20,-20,-14,-14]))), "tree", true);
+        this.placeGroup(this.rotate(this.rotate(this.rotate([-14,-20,-10,-16]))), "tree", true);
+        this.placeGroup(this.rotate(this.rotate(this.rotate([-20,-14,-16,-9]))), "tree", true);
+        this.placeGroup(this.rotate(this.rotate(this.rotate([-20,-9,-18,-4]))), "tree", true);
+        this.placeGroup(this.rotate(this.rotate(this.rotate([-10,-20,-4,-18]))), "tree", true);
+        this.placeGroup(this.rotate(this.rotate(this.rotate([-16,-16,-13,-13]))), "tree", true);
     }
 
     placeRoads() {
@@ -265,7 +278,8 @@ export default class GameScene extends Phaser.Scene {
     }
 
     placeBushes() {
-        this.placeGroup([1,1,5,5], "bush");
+        // this.placeGroup([1,1,5,5], "bush");
+        return;
     }
 
     // place a straight path (either horizontal or vertical) given relative coordinates
@@ -302,11 +316,11 @@ export default class GameScene extends Phaser.Scene {
     }
 
     // place trees in a rectangle starting at index (startX, startY) and ending at (endX, endY), in relative coordinates
-    placeGroup(coordinates: integer[], object: string) {
+    placeGroup(coordinates: integer[], object: string, collidable: boolean = true) {
         const startX = coordinates[0];
         const startY = coordinates[1];
         const endX = coordinates[2];
-        const endY = coordinates[3];
+        const endY = coordinates[3]; 
 
         if (startX >= endX || startY >= endY || 
             startX < -this.dimension/2 || 
@@ -319,7 +333,11 @@ export default class GameScene extends Phaser.Scene {
 
         for (let i = startX; i < endX; i++) {
             for (let j = startY; j < endY; j++) {
-                this.placeImage(i, j, object);
+                if (collidable) {
+                    this.placeCollidableImage(i, j, object);
+                } else {
+                    this.placeImage(i, j, object);
+                }
             }
         }
     }
