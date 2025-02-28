@@ -257,7 +257,7 @@ export default class GameScene extends Phaser.Scene {
                 if (this.layout[j][i] == 1) {
                     this.placeImage(i, j, "tree");
                     this.collidableLayout[j][i] = 1;
-                    // this.collidableLayout[j][i + 1] = 1;
+                    this.collidableLayout[j][i + 1] = 1;
                     // this.collidableLayout[j][i - 1] = 1;
                     this.collidableLayout[j - 1][i] = 1;
                     // this.collidableLayout[j - 1][i + 1] = 1;
@@ -595,6 +595,13 @@ export default class GameScene extends Phaser.Scene {
                     yoyo: false,
                     onStart: () => {
                         this.player.anims.play('left');
+                    },
+                    // TODO: abstract this part into its own function
+                    onUpdate: (tween: Phaser.Tweens.Tween) => {
+                        const relativeCoords = this.getPlayerCoords();
+                        if (this.collidableLayout[relativeCoords[1]][relativeCoords[0]] == 1) {
+                            tween.stop();
+                        }
                     }
                 });
                 break;
@@ -619,6 +626,12 @@ export default class GameScene extends Phaser.Scene {
                     yoyo: false,
                     onStart: () => {
                         this.player.anims.play('right');
+                    },
+                    onUpdate: (tween: Phaser.Tweens.Tween) => {
+                        const relativeCoords = this.getPlayerCoords();
+                        if (this.collidableLayout[relativeCoords[1]][relativeCoords[0] + 1] == 1) {
+                            tween.stop();
+                        }
                     }
                 });
                 break;
@@ -643,6 +656,12 @@ export default class GameScene extends Phaser.Scene {
                     yoyo: false,
                     onStart: () => {
                         this.player.anims.play('up');
+                    },
+                    onUpdate: (tween: Phaser.Tweens.Tween) => {
+                        const relativeCoords = this.getPlayerCoords();
+                        if (this.collidableLayout[relativeCoords[1] - 1][relativeCoords[0]] == 1) {
+                            tween.stop();
+                        }
                     }
                 });
                 break;
@@ -667,6 +686,12 @@ export default class GameScene extends Phaser.Scene {
                     yoyo: false,
                     onStart: () => {
                         this.player.anims.play('down');
+                    },
+                    onUpdate: (tween: Phaser.Tweens.Tween) => {
+                        const relativeCoords = this.getPlayerCoords();
+                        if (this.collidableLayout[relativeCoords[1] + 1][relativeCoords[0]] == 1) {
+                            tween.stop();
+                        }
                     }
                 });
                 break;
@@ -681,7 +706,7 @@ export default class GameScene extends Phaser.Scene {
             delay: this.delay,
             loop: true,
             callback: () => {
-                this.moveCharacter(direction)
+                this.moveCharacter(direction);
             }
             
         })
