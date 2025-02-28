@@ -2,13 +2,18 @@
 
 Inspired by old-school Nintendo Pokemon games ^-^ Built using Phaser 3, React, and TypeScript.
 
-# if you're curious
-### TLDR of how it works
-The map is grid-based, and throughout the entire codebase, I use a custom coordinate system to ([0,0] to [80,80]) to make object placement eaiser. The player is also restricted to moving within these grid lines. 
+# If you're curious about how it works
+### TLDR 
+The website is a grid-based map, and I use a custom grid coordinate system (rather than using individual pixels) to make object placement easier. The player is also restricted to moving within these grid lines. 
 ### Code-free Layout Customization
-You can customize the map however you'd like by simply creating an 80 x 80 CSV file containing the layout you want and upload it to /public. Think of it like designing a new Clash of Clans base! This is probably my favourite feature of this project, and it's cool because it kind of happened as a byproduct of trying to make it easier for myself to populate the map. Here's an example of a spreadsheet I used (I'm using Google Sheets to generate the CSV but you can use whatever you'd like (I highly recommend colouring your cells based on number for visual clarity)):
+Clone the repo and create your very own map!
+<br> <br>
+You can customize the map however you'd like by simply creating an 80 x 80 CSV file containing the layout you want and uploading it to /public (make sure its name is layout.csv). Think of it like designing a new Clash of Clans base! 
+<br><br>
+This is probably my favourite feature of this project, and it's cool because it kind of happened as a byproduct of trying to make it easier for myself to populate the map. Here's an example of a spreadsheet I used (I'm using Google Sheets to generate the CSV but you can use whatever you'd like (I highly recommend colouring your cells based on number for visual clarity)):
+<br> <br>
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/64bbd400-2786-47ca-b726-78281ca6ed66" />
 <br>
-<img width="1454" alt="image" src="https://github.com/user-attachments/assets/64bbd400-2786-47ca-b726-78281ca6ed66" />
 Legend:
 - 0: nothing
 - 1: tree
