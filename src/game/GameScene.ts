@@ -121,9 +121,9 @@ export default class GameScene extends Phaser.Scene {
         // character animations
         this.createAnims();
         // coordinates
-        this.xCoord = this.add.text(20,20,'X: 0', { fontSize: '20px', fill: '#256' });
+        this.xCoord = this.add.text(20,20,'X: 0', { fontSize: '20px', fill: '#fff', backgroundColor: '#000000',});
         this.xCoord.setScrollFactor(0);
-        this.yCoord = this.add.text(20,40,'Y: 0', { fontSize: '20px', fill: '#256' });
+        this.yCoord = this.add.text(20,40,'Y: 0', { fontSize: '20px', fill: '#fff', backgroundColor: '#000000', });
         this.yCoord.setScrollFactor(0);
 
         // centering the player in the viewport
@@ -220,10 +220,11 @@ export default class GameScene extends Phaser.Scene {
         this.cellHeight = this.bgHeight / this.dimension;
 
         // trees, paths, bushes
-        this.renderTrees();
-        this.renderPath();
-        this.placeBushes();
-        this.placeHouses();
+        this.placeTrees();
+        this.placePath();
+        // this.placeBushes();
+        // this.placeHouses();
+        this.placeLayout();
 
         // text
         const coordinates = this.realCoord(-3,-4);
@@ -251,23 +252,20 @@ export default class GameScene extends Phaser.Scene {
         return [relativeX, relativeY];
     }
 
-    renderTrees() {
+    placeTrees() {
         for (let i = 1; i < this.dimension; i += 2) {
             for (let j = 1; j < this.dimension; j += 2) {
                 if (this.layout[j][i] == 1) {
                     this.placeImage(i, j, "tree");
                     this.collidableLayout[j][i] = 1;
                     this.collidableLayout[j][i + 1] = 1;
-                    // this.collidableLayout[j][i - 1] = 1;
                     this.collidableLayout[j - 1][i] = 1;
-                    // this.collidableLayout[j - 1][i + 1] = 1;
-                    // this.collidableLayout[j - 1][i - 1] = 1;
                 }
             }
         }
     }
 
-    renderPath() {
+    placePath() {
         for (let i = 0; i < this.dimension; i++) {
             for (let j = 0; j < this.dimension; j++) {
                 const curr = this.layout[j][i] == 2;
@@ -351,84 +349,30 @@ export default class GameScene extends Phaser.Scene {
         }
     }
 
-    renderLayout() {
+    placeLayout() {
         for (let i = 0; i < this.dimension; i++) {
             for (let j = 0; j < this.dimension; j++) {
-                return
+                if (this.layout[j][i] == 11 && this.layout[j - 1][i] != 11 && this.layout[j - 1][i] != 11) {
+                    this.placeImage(i, j, "house-1");
+                    
+                    this.collidableLayout[j ][i + 1] = 1;
+                    this.collidableLayout[j ][i] = 1;
+                    this.collidableLayout[j ][i + 2] = 1;
+                }
             }
         }
     }
 
     placeImage(relativeX: integer, relativeY: integer, assetName: string) {
         const realCoords = this.realCoord(relativeX, relativeY);
+
+        // TODO: set the origin of the image so that its top left corner is flush with the grid system
         const image = this.add.image(realCoords[0], realCoords[1], assetName);
+        const xShift = (this.cellWidth/2)/image.width;
+        const yShift = (this.cellHeight/2)/image.height;
+        image.setOrigin(xShift,yShift);
         return image;
     }
-
-    // lowkey don't need this anymore
-    // placeForest() {
-    //     // perimeter
-    //     this.placeGroup([-40,-40,40,-20], "tree", true);
-    //     this.placeGroup([-40,20,40,40], "tree", true);
-    //     this.placeGroup([-40,-20,-20,20], "tree", true);
-    //     this.placeGroup([20,-20,40,20], "tree", true);
-    //     // smoothing
-    //     this.placeGroup([-20,-20,-14,-14], "tree", true);
-    //     this.placeGroup([-14,-20,-10,-16], "tree", true);
-    //     this.placeGroup([-20,-14,-16,-9], "tree", true);
-    //     this.placeGroup([-20,-9,-18,-4], "tree", true);
-    //     this.placeGroup([-10,-20,-4,-18], "tree", true);
-    //     this.placeGroup([-16,-16,-13,-13], "tree", true);
-
-    //     this.placeGroup(this.rotate([-20,-20,-14,-14]), "tree", true);
-    //     this.placeGroup(this.rotate([-14,-20,-10,-16]), "tree", true);
-    //     this.placeGroup(this.rotate([-20,-14,-16,-9]), "tree", true);
-    //     this.placeGroup(this.rotate([-20,-9,-18,-4]), "tree", true);
-    //     this.placeGroup(this.rotate([-10,-20,-4,-18]), "tree", true);
-    //     this.placeGroup(this.rotate([-16,-16,-13,-13]), "tree", true);
-
-    //     this.placeGroup(this.rotate(this.rotate([-20,-20,-14,-14])), "tree", true);
-    //     this.placeGroup(this.rotate(this.rotate([-14,-20,-10,-16])), "tree", true);
-    //     this.placeGroup(this.rotate(this.rotate([-20,-14,-16,-9])), "tree", true);
-    //     this.placeGroup(this.rotate(this.rotate([-20,-9,-18,-4])), "tree", true);
-    //     this.placeGroup(this.rotate(this.rotate([-10,-20,-4,-18])), "tree", true);
-    //     this.placeGroup(this.rotate(this.rotate([-16,-16,-13,-13])), "tree", true);
-
-    //     this.placeGroup(this.rotate(this.rotate(this.rotate([-20,-20,-14,-14]))), "tree", true);
-    //     this.placeGroup(this.rotate(this.rotate(this.rotate([-14,-20,-10,-16]))), "tree", true);
-    //     this.placeGroup(this.rotate(this.rotate(this.rotate([-20,-14,-16,-9]))), "tree", true);
-    //     this.placeGroup(this.rotate(this.rotate(this.rotate([-20,-9,-18,-4]))), "tree", true);
-    //     this.placeGroup(this.rotate(this.rotate(this.rotate([-10,-20,-4,-18]))), "tree", true);
-    //     this.placeGroup(this.rotate(this.rotate(this.rotate([-16,-16,-13,-13]))), "tree", true);
-    // }
-
-    // lowkey don't need this anymore
-    // placeRoads() {
-    //     this.placePath(0, 0, 15, "v"); // bottom middle vertical
-
-    //     this.placePath(-7, 7, 15, "h"); // bottom upper horizontal
-    //     this.placePath(-5, 12, 11, "h"); // bottom lower horizontal
-
-    //     // rectangle
-    //     this.placePath(-13, 0, 26, "h");
-    //     this.placePath(-10, -8, 8, "v");
-    //     this.placePath(9, -8, 8, "v");
-    //     this.placePath(-10, -9, 20, "h");
-    //     // corners
-    //     this.placeImage(-10,-9,"path-tl");
-    //     this.placeImage(9,-9,"path-tr");
-    //     // intersections
-    //     this.placeImage(-10, 0, "path-3-up")
-    //     this.placeImage(-5, -9, "path-3-up")
-    //     this.placeImage(4, -9, "path-3-up")
-    //     this.placeImage(9, 0, "path-3-up")
-    //     this.placeImage(0, 0, "path-3-down")
-    //     this.placeImage(0, 7, "path-4")
-    //     this.placeImage(0, 12, "path-4")
-        
-    //     this.placePath(-5, -13, 4, "v"); // top left vertical
-    //     this.placePath(4, -13, 4, "v"); // top right vertical
-    // }
 
     // lowkey don't need this anymore
     placeBushes() {
@@ -437,23 +381,9 @@ export default class GameScene extends Phaser.Scene {
     }
 
     placeHouses() {
-        this.placeImage(40, 40 , "house-1");
         this.placeImage(45, 45 , "house-2");
     }
 
-    // lowkey don't need this anymore
-    // place a straight path (either horizontal or vertical) given relative coordinates
-    placePath(startX: integer, startY: integer, length: integer, direction: string) {
-        if (direction === "h") {
-            for (let i = 0; i < length; i++) {
-                this.placeImage(startX + i, startY, "path-hor");
-            }
-        } else if (direction === "v") {
-            for (let i = 0; i < length; i++) {
-                this.placeImage(startX, startY + i, "path-ver");
-            }
-        }
-    }
 
     // lowkey don't need this anymore
     // given two coordinates in the form [x1, y1, x2, y2], return a version rotated by 90 degrees clockwise 
