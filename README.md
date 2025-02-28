@@ -10,9 +10,11 @@ Clone the repo and create your very own map!
 <br> <br>
 You can customize the map however you'd like by simply creating an 80 x 80 CSV file containing the layout you want and uploading it to /public (make sure its name is layout.csv). Think of it like designing a new Clash of Clans base! 
 <br><br>
-This is probably my favourite feature of this project, and it's cool because it kind of happened as a byproduct of trying to make it easier for myself to populate the map. Here's an example of a spreadsheet I used (I'm using Google Sheets to generate the CSV but you can use whatever you'd like (I highly recommend colouring your cells based on number for visual clarity)):
+This is probably my favourite feature of this project, and it's cool because it kind of happened as a byproduct of trying to make it easier for myself to populate the map. Here's [an example of a spreadsheet](https://docs.google.com/spreadsheets/d/1CKZPGgkdf-Rzxx7nUUlGDda6GQvsGRF21Jx-axcMvm8/edit?usp=sharing) I used (I'm using Google Sheets to generate the CSV but you can use whatever you'd like (I highly recommend colouring your cells based on number for visual clarity)), along with the map it generated (there are missing road patches bc of a few bugs at this point):
 <br> <br>
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/64bbd400-2786-47ca-b726-78281ca6ed66" />
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/8c88ab7f-94dc-4a2c-b64d-1329596811d4" />
+
 <br>
 Legend:
 - 0: nothing
