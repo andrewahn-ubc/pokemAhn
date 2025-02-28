@@ -31,13 +31,17 @@ export default class GameScene extends Phaser.Scene {
     private backgroundMusic!: Phaser.Sound.BaseSound;
     // character movement
     private delay = 200; // 200 is optimal
-    // layouts
+    // layout
+    //      Legend
+    //      1: tree
+    //      2: path
     private layout!: number[][];
-    private collidableLayout: number[][] = new Array(this.dimension).fill(null).map(() => new Array(this.dimension).fill(0));
-    // Layout Legend
-    // 1: tree
-    // 2: path
 
+    // table that tracks collidable objects
+    //      Legend
+    //      0: nothing - player can pass through
+    //      1: something - player cannot pass through
+    private collidableLayout: number[][] = new Array(this.dimension).fill(null).map(() => new Array(this.dimension).fill(0));
 
     // initialize our scene
 
@@ -151,10 +155,15 @@ export default class GameScene extends Phaser.Scene {
         }
     }
 
+    // returns the player's relative coordinates
+    getPlayerCoords(): number[] {
+        return this.relativeCoord(this.player.x, this.player.y);
+    }
+
     update() {
         this.player.setVelocity(0);
         // update coordinates
-        const relativeCoords = this.relativeCoord(this.player.x, this.player.y);
+        const relativeCoords = this.getPlayerCoords();
         this.xCoord.setText("X: " + Math.floor(relativeCoords[0]));
         this.yCoord.setText("Y: " + Math.floor(relativeCoords[1]));
 
@@ -247,6 +256,12 @@ export default class GameScene extends Phaser.Scene {
             for (let j = 1; j < this.dimension; j += 2) {
                 if (this.layout[j][i] == 1) {
                     this.placeImage(i, j, "tree");
+                    this.collidableLayout[j][i] = 1;
+                    // this.collidableLayout[j][i + 1] = 1;
+                    // this.collidableLayout[j][i - 1] = 1;
+                    this.collidableLayout[j - 1][i] = 1;
+                    // this.collidableLayout[j - 1][i + 1] = 1;
+                    // this.collidableLayout[j - 1][i - 1] = 1;
                 }
             }
         }
@@ -556,12 +571,20 @@ export default class GameScene extends Phaser.Scene {
 
     // helper for actually moving the player
     moveCharacter(direction: string) {
+        const relativeCoords = this.getPlayerCoords();
+
         switch (direction) {
             case "left":
                 if (this.player.x - 50 < -this.bgWidth/2 + window.innerWidth) {
                     console.log("player out of bounds")
                     return
                 }
+
+                if (this.collidableLayout[relativeCoords[1]][relativeCoords[0] - 1] == 1) {
+                    console.log("cannot move through solid object")
+                    return
+                }
+                
                 this.numHor -= 1;
                 this.tweens.add({
                     targets: this.player,  
@@ -580,6 +603,12 @@ export default class GameScene extends Phaser.Scene {
                     console.log("player out of bounds");
                     return
                 }
+
+                if (this.collidableLayout[relativeCoords[1]][relativeCoords[0] + 1] == 1) {
+                    console.log("cannot move through solid object")
+                    return
+                }
+
                 this.numHor += 1
                 this.tweens.add({
                     targets: this.player,  
@@ -590,7 +619,7 @@ export default class GameScene extends Phaser.Scene {
                     yoyo: false,
                     onStart: () => {
                         this.player.anims.play('right');
-                    }   
+                    }
                 });
                 break;
             case "up":
@@ -598,6 +627,12 @@ export default class GameScene extends Phaser.Scene {
                     console.log("player out of bounds")
                     return
                 }
+
+                if (this.collidableLayout[relativeCoords[1] - 1][relativeCoords[0]] == 1) {
+                    console.log("cannot move through solid object")
+                    return
+                }
+
                 this.numVer -= 1;
                 this.tweens.add({
                     targets: this.player,  
@@ -608,7 +643,7 @@ export default class GameScene extends Phaser.Scene {
                     yoyo: false,
                     onStart: () => {
                         this.player.anims.play('up');
-                    } 
+                    }
                 });
                 break;
             case "down":
@@ -616,6 +651,12 @@ export default class GameScene extends Phaser.Scene {
                     console.log("player out of bounds")
                     return
                 }
+
+                if (this.collidableLayout[relativeCoords[1] + 1][relativeCoords[0]] == 1) {
+                    console.log("cannot move through solid object")
+                    return
+                }
+
                 this.numVer += 1;
                 this.tweens.add({
                     targets: this.player,  
@@ -626,7 +667,7 @@ export default class GameScene extends Phaser.Scene {
                     yoyo: false,
                     onStart: () => {
                         this.player.anims.play('down');
-                    } 
+                    }
                 });
                 break;
         }
