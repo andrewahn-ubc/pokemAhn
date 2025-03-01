@@ -358,6 +358,9 @@ export default class GameScene extends Phaser.Scene {
                     this.collidableLayout[j ][i + 1] = 1;
                     this.collidableLayout[j ][i] = 1;
                     this.collidableLayout[j ][i + 2] = 1;
+                    this.collidableLayout[j + 1][i + 1] = 1;
+                    this.collidableLayout[j + 1][i] = 1;
+                    this.collidableLayout[j + 1][i + 2] = 1;
                 }
             }
         }
@@ -571,7 +574,7 @@ export default class GameScene extends Phaser.Scene {
                     return
                 }
 
-                if (this.collidableLayout[relativeCoords[1] - 1][relativeCoords[0]] == 1) {
+                if (this.collidableLayout[relativeCoords[1]][relativeCoords[0]] == 1) {
                     console.log("cannot move through solid object")
                     return
                 }
@@ -589,7 +592,7 @@ export default class GameScene extends Phaser.Scene {
                     },
                     onUpdate: (tween: Phaser.Tweens.Tween) => {
                         const relativeCoords = this.getPlayerCoords();
-                        if (this.collidableLayout[relativeCoords[1] - 1][relativeCoords[0]] == 1) {
+                        if (this.collidableLayout[relativeCoords[1]][relativeCoords[0]] == 1) {
                             tween.stop();
                         }
                     }
