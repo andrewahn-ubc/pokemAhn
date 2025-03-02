@@ -32,6 +32,7 @@ Legend:
 - if the player stops moving while facing a non-down direction, leave them standing in that direction
 - other scenes (when the player "enters" a house, for example)
 - some actual gameplay?
+- improve collision detection (player shouldn't be able to move "into" the tree at all (it currently moves into the tree slightly))
 
 # Progress
 Day 3:
