@@ -253,13 +253,14 @@ export default class GameScene extends Phaser.Scene {
     }
 
     placeTrees() {
-        for (let i = 1; i < this.dimension; i += 2) {
-            for (let j = 1; j < this.dimension; j += 2) {
+        for (let i = 1; i  + 1< this.dimension; i += 2) {
+            for (let j = 1; j + 1< this.dimension; j += 2) {
                 if (this.layout[j][i] == 1) {
                     this.placeImage(i, j, "tree");
-                    this.collidableLayout[j][i] = 1;
                     this.collidableLayout[j][i + 1] = 1;
-                    this.collidableLayout[j - 1][i] = 1;
+                    this.collidableLayout[j][i] = 1;
+                    this.collidableLayout[j + 1][i + 1] = 1;
+                    this.collidableLayout[j + 1][i] = 1;
                 }
             }
         }
