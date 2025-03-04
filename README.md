@@ -2,6 +2,12 @@
 
 Inspired by old-school Nintendo Pokemon games ^-^ Built using Phaser 3, React, and TypeScript.
 
+## How to Play
+Arrow keys: move player/navigate the map
+Space bar: pause/resume music
+f: switch song
++/-: zoom in/out
+
 # If you're curious about how it works
 ### TLDR 
 The website is a grid-based map, and I use a custom grid coordinate system (rather than using individual pixels) to make object placement easier. The player is also restricted to moving within these grid lines. 
