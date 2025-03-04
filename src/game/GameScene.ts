@@ -39,8 +39,13 @@ export default class GameScene extends Phaser.Scene {
     //      2: path
     //      3: bush
     //      4: white flower
+    //      5: red and white flower
+    //      6: red flower
     //      7: nice bush
+    //      8: flowerbed
+    //      9: short tree
     //      11: house #1
+    //      12: house #2
     private layout!: number[][];
 
     // table that tracks collidable objects
@@ -63,9 +68,13 @@ export default class GameScene extends Phaser.Scene {
         this.load.spritesheet("player_oldman", "/assets/players/player_oldman.png", { frameWidth: 32, frameHeight: 48 });
         this.load.image("github", "/assets/github-mark.png");
         this.load.image("tree", "/assets/tree.png");
+        this.load.image("tree-short", "/assets/tree_short.png");
         this.load.image("bush", "/assets/bush.png");
         this.load.image("flower-white", "/assets/flower_white.png");
+        this.load.image("flower-redwhite", "/assets/flower_redwhite.png");
+        this.load.image("flower-red", "/assets/flower_red.png");
         this.load.image("nice-bush", "/assets/nice_bush.png");
+        this.load.image("flowerbed", "/assets/flowerbed.png");
         // paths
         this.load.image("path-ver", "/assets/paths/path_ver.png");
         this.load.image("path-hor", "/assets/paths/path_hor.png");
@@ -250,7 +259,7 @@ export default class GameScene extends Phaser.Scene {
         this.cellHeight = this.bgHeight / this.dimension;
 
         // trees, paths, bushes
-        this.placeTrees();
+        this.placeTreesAndFlowerbeds();
         this.placePath();
         this.placeLayout();
     }
@@ -269,7 +278,7 @@ export default class GameScene extends Phaser.Scene {
         return [relativeX, relativeY];
     }
 
-    placeTrees() {
+    placeTreesAndFlowerbeds() {
         for (let i = 1; i  + 1< this.dimension; i += 2) {
             for (let j = 1; j + 1< this.dimension; j += 2) {
                 if (this.layout[j][i] == 1) {
@@ -278,6 +287,8 @@ export default class GameScene extends Phaser.Scene {
                     this.collidableLayout[j][i] = 1;
                     this.collidableLayout[j + 1][i + 1] = 1;
                     this.collidableLayout[j + 1][i] = 1;
+                } else if (this.layout[j][i] == 8) {
+                    this.placeImage(i, j, "flowerbed");
                 }
             }
         }
@@ -378,7 +389,19 @@ export default class GameScene extends Phaser.Scene {
     placeLayout() {
         for (let i = 0; i < this.dimension; i++) {
             for (let j = 0; j < this.dimension; j++) {
-                if (this.layout[j][i] == 11 && this.layout[j - 1][i] != 11 && this.layout[j - 1][i] != 11) {
+                if (this.layout[j][i] == 3) {
+                    this.placeImage(i, j, "bush");
+                } else if (this.layout[j][i] == 4) {
+                    this.placeImage(i, j, "flower-white");
+                } else if (this.layout[j][i] == 5) {
+                    this.placeImage(i, j, "flower-redwhite");
+                } else if (this.layout[j][i] == 6) {
+                    this.placeImage(i, j, "flower-red");
+                } else if (this.layout[j][i] == 7) {
+                    this.placeImage(i, j, "nice-bush");
+                } else if (this.layout[j][i] == 9) {
+                    this.placeImage(i, j, "tree-short");
+                } else if (this.layout[j][i] == 11 && this.layout[j - 1][i] != 11 && this.layout[j - 1][i] != 11) {
                     this.placeImage(i, j, "house-1");
                     
                     this.collidableLayout[j ][i + 1] = 1;
@@ -387,13 +410,16 @@ export default class GameScene extends Phaser.Scene {
                     this.collidableLayout[j + 1][i + 1] = 1;
                     this.collidableLayout[j + 1][i] = 1;
                     this.collidableLayout[j + 1][i + 2] = 1;
-                } else if (this.layout[j][i] == 3) {
-                    this.placeImage(i, j, "bush");
-                } else if (this.layout[j][i] == 4) {
-                    this.placeImage(i, j, "flower-white");
-                } else if (this.layout[j][i] == 7) {
-                    this.placeImage(i, j, "nice-bush");
-                } 
+                } else if (this.layout[j][i] == 12 && this.layout[j - 1][i] != 12 && this.layout[j - 1][i] != 12) {
+                    this.placeImage(i, j, "house-2");
+                    
+                    this.collidableLayout[j ][i + 1] = 1;
+                    this.collidableLayout[j ][i] = 1;
+                    this.collidableLayout[j ][i + 2] = 1;
+                    this.collidableLayout[j + 1][i + 1] = 1;
+                    this.collidableLayout[j + 1][i] = 1;
+                    this.collidableLayout[j + 1][i + 2] = 1;
+                }
             }
         }
     }

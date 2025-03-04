@@ -22,10 +22,19 @@ This is probably my favourite feature of this project, and it's cool because it 
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/8c88ab7f-94dc-4a2c-b64d-1329596811d4" />
 
 <br>
-Legend:
+Legend
 - 0: nothing
 - 1: tree
-- 2: path (don't worry, I'm gonna add more stuff)
+- 2: path
+- 3: bush
+- 4: white flower
+- 5: red and white flower
+- 6: red flower
+- 7: nice bush
+- 8: flowerbed
+- 9: short tree
+- 11: house #1
+- 12: house #2
 
 <br>
 
