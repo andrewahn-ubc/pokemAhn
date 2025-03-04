@@ -113,13 +113,10 @@ export default class GameScene extends Phaser.Scene {
     create() {
         this.centerX = window.innerWidth/2;
         this.centerY = window.innerHeight/2;
-        this.environment = this.physics.add.staticGroup(); // create static group that the player will collide with
         this.setUpWorld();
         // character
         this.player = this.addCharacter(40, 40, "player");
-        this.characters["player"] = this.player;
         this.player_oldman = this.addCharacter(38, 38, "player_oldman");
-        this.characters["player_oldman"] = this.player_oldman;
         this.player.setCollideWorldBounds(true);
 
         // character animations
@@ -166,6 +163,7 @@ export default class GameScene extends Phaser.Scene {
         const realCoord = this.realCoord(positionX, positionY);
         const player = this.physics.add.sprite(realCoord[0], realCoord[1], name);
         this.positions[name] = [positionX, positionY];
+        this.characters[name] = player;
 
         return player;
     }
@@ -181,31 +179,31 @@ export default class GameScene extends Phaser.Scene {
         const relativeCoords = this.getPlayerCoords("player");
         this.xCoord.setText("X: " + Math.floor(relativeCoords[0]));
         this.yCoord.setText("Y: " + Math.floor(relativeCoords[1]));
-        this.startMovingNPC(this.player_oldman, "player_oldman")
+        this.startMovingNPC("player_oldman")
         this.handleNPCNearPlayer("player_oldman");
 
         // handle initial arrow click (without this section, there's a pause before player moves)
         if (Phaser.Input.Keyboard.JustDown(this.cursors.right)) {
             this.stopMoving("player");
-            this.moveCharacter('right', this.player, "player")
+            this.moveCharacter('right', "player")
             this.mostRecentPlayerMove = "right"
             this.arrows.shift()
             this.arrows.push("right")
         } else if (Phaser.Input.Keyboard.JustDown(this.cursors.left)) {
             this.stopMoving("player");
-            this.moveCharacter('left', this.player, "player")
+            this.moveCharacter('left', "player")
             this.mostRecentPlayerMove = "left"
             this.arrows.shift()
             this.arrows.push("left")
         } else if (Phaser.Input.Keyboard.JustDown(this.cursors.up)) {
             this.stopMoving("player");
-            this.moveCharacter('up', this.player, "player")
+            this.moveCharacter('up', "player")
             this.mostRecentPlayerMove = "up"
             this.arrows.shift()
             this.arrows.push("up")
         } else if (Phaser.Input.Keyboard.JustDown(this.cursors.down)) {
             this.stopMoving("player");
-            this.moveCharacter('down', this.player, "player")
+            this.moveCharacter('down', "player")
             this.mostRecentPlayerMove = "down"
             this.arrows.shift()
             this.arrows.push("down")
@@ -243,20 +241,7 @@ export default class GameScene extends Phaser.Scene {
         // trees, paths, bushes
         this.placeTrees();
         this.placePath();
-        // this.placeBushes();
-        // this.placeHouses();
         this.placeLayout();
-
-        // text
-        const coordinates = this.realCoord(-3,-4);
-        this.add.text(coordinates[0],coordinates[1],'ayyyy welcome to my site', { fontSize: '20px', fill: '#000' });
-
-        // links
-        // const githubButton = this.placeImage(0, -2, "github");
-        // githubButton.setInteractive();
-        // githubButton.on("pointerdown", () => {
-        //     window.open("https://github.com/andrewahn-ubc", "_blank"); // Open link in new tab
-        // });
     }
 
     // takes in relative coordinates and outputs real coordinates
@@ -407,62 +392,6 @@ export default class GameScene extends Phaser.Scene {
         return image;
     }
 
-    // lowkey don't need this anymore
-    placeBushes() {
-        // this.placeGroup([1,1,5,5], "bush");
-        return;
-    }
-
-    placeHouses() {
-        this.placeImage(45, 45 , "house-2");
-    }
-
-
-    // lowkey don't need this anymore
-    // given two coordinates in the form [x1, y1, x2, y2], return a version rotated by 90 degrees clockwise 
-    rotate(coordinates: integer[]) {
-        const x1 = coordinates[0];
-        const y1 = coordinates[1];
-        const x2 = coordinates[2];
-        const y2 = coordinates[3];
-
-        // multiplies each coordinate by the rotation matrix
-        // [0 -1]
-        // [1, 0]
-        // then adjusts coordinates to ensure we're passing the top left and bottom right corner of the desired forest
-        // (without this adjustment, we would return the top right and bottom left corner, due to rotation)
-        coordinates[0] = -y2;
-        coordinates[1] = x1;
-        coordinates[2] = -y1;
-        coordinates[3] = x2;
-
-        return coordinates;
-    }
-
-    // lowkey don't need this anymore, but it's nice to have
-    // place trees in a rectangle starting at index (startX, startY) and ending at (endX, endY), in relative coordinates
-    placeGroup(coordinates: integer[], object: string) {
-        const startX = coordinates[0];
-        const startY = coordinates[1];
-        const endX = coordinates[2];
-        const endY = coordinates[3]; 
-
-        if (startX >= endX || startY >= endY || 
-            startX < -this.dimension/2 || 
-            startY < -this.dimension/2 ||
-            endX > this.dimension/2 ||
-            endY > this.dimension/2) {
-            console.log("dimensions are messed up lowkey");
-            return
-        }
-
-        for (let i = startX; i < endX; i += 2) {
-            for (let j = startY; j < endY; j += 2) {
-                this.placeImage(i, j, object);
-            }
-        }
-    }
-
     // HARD ASSUMPTION: the character must have 16 frames, 4 per direction (in the order: down, left, right, and up)
     createAnims(character: string) {
         this.anims.create({
@@ -544,8 +473,9 @@ export default class GameScene extends Phaser.Scene {
     }
 
     // helper for actually moving the player
-    moveCharacter(direction: string, character: Phaser.Physics.Arcade.Sprite, characterName: string) {
+    moveCharacter(direction: string, characterName: string) {
         const relativeCoords = this.getPlayerCoords(characterName); // TODO: abstract to work for any character
+        const character = this.characters[characterName];
 
         switch (direction) {
             case "left": {
@@ -705,7 +635,7 @@ export default class GameScene extends Phaser.Scene {
     }
 
     // encodes random movement of NPCs
-    startMovingNPC(character: Phaser.Physics.Arcade.Sprite, characterName: string) {
+    startMovingNPC(characterName: string) {
         if (this.npcMoveEvents[characterName]) return;
 
         this.npcMoveEvents[characterName] = this.time.addEvent({
@@ -718,7 +648,7 @@ export default class GameScene extends Phaser.Scene {
                 const randomIndex = Math.floor(Math.random()*listSize)
                 const randomAction = actionList[randomIndex]
 
-                this.moveCharacter(randomAction, character, characterName);
+                this.moveCharacter(randomAction, characterName);
                 // character.anims.play(characterName + '-still')
             }
         })
@@ -797,7 +727,7 @@ export default class GameScene extends Phaser.Scene {
             delay: this.delay["player"],
             loop: true,
             callback: () => {
-                this.moveCharacter(direction, this.player, "player");
+                this.moveCharacter(direction, "player");
             }
             
         })
