@@ -37,6 +37,9 @@ export default class GameScene extends Phaser.Scene {
     //      Legend
     //      1: tree
     //      2: path
+    //      3: bush
+    //      4: white flower
+    //      7: nice bush
     //      11: house #1
     private layout!: number[][];
 
@@ -61,6 +64,8 @@ export default class GameScene extends Phaser.Scene {
         this.load.image("github", "/assets/github-mark.png");
         this.load.image("tree", "/assets/tree.png");
         this.load.image("bush", "/assets/bush.png");
+        this.load.image("flower-white", "/assets/flower_white.png");
+        this.load.image("nice-bush", "/assets/nice_bush.png");
         // paths
         this.load.image("path-ver", "/assets/paths/path_ver.png");
         this.load.image("path-hor", "/assets/paths/path_hor.png");
@@ -155,6 +160,12 @@ export default class GameScene extends Phaser.Scene {
                 }
             });
             this.cursors = this.input.keyboard.createCursorKeys();
+            this.input.keyboard.on('keydown-F', () => {
+                this.backgroundMusic.stop();
+                const nextSong = this.backgroundMusic.key == 'trap' ? 'bgMusic' : 'trap';
+                this.backgroundMusic = this.sound.add(nextSong, {loop:true, volume: 0.5});
+                this.backgroundMusic.play();
+            });
         }
     }
 
@@ -376,7 +387,13 @@ export default class GameScene extends Phaser.Scene {
                     this.collidableLayout[j + 1][i + 1] = 1;
                     this.collidableLayout[j + 1][i] = 1;
                     this.collidableLayout[j + 1][i + 2] = 1;
-                }
+                } else if (this.layout[j][i] == 3) {
+                    this.placeImage(i, j, "bush");
+                } else if (this.layout[j][i] == 4) {
+                    this.placeImage(i, j, "flower-white");
+                } else if (this.layout[j][i] == 7) {
+                    this.placeImage(i, j, "nice-bush");
+                } 
             }
         }
     }
@@ -386,8 +403,8 @@ export default class GameScene extends Phaser.Scene {
 
         // TODO: set the origin of the image so that its top left corner is flush with the grid system
         const image = this.add.image(realCoords[0], realCoords[1], assetName);
-        const xShift = (this.cellWidth/2)/image.width;
-        const yShift = (this.cellHeight/2)/image.height;
+        const xShift = (image.width > this.cellWidth) ? (this.cellWidth/2)/image.width : 0.5;
+        const yShift = (image.height > this.cellHeight) ? (this.cellHeight/2)/image.height : 0.5;
         image.setOrigin(xShift,yShift);
         return image;
     }
