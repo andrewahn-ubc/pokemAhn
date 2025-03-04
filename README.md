@@ -26,7 +26,7 @@ Legend:
 
 # TODO
 - take care of more edge cases for path generation (the one where 3 sides and 1 corner are path, and the end of single-width paths)
-- implement NPCs (just walking around is fine for now, dialogue can come later)
+- implement NPCs (just walking around is fine for now, dialogue can come later) (almost done, just need to confine NPCs to certain areas)
 - populate the scene with houses, bushes, rocks, flowers, and signs
 - create elements that can generate popups
 - if the player stops moving while facing a non-down direction, leave them standing in that direction
