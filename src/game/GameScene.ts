@@ -3,6 +3,7 @@ import Phaser from "phaser";
 export default class GameScene extends Phaser.Scene {
     private bg!: Phaser.GameObjects.Image;
     private player!: Phaser.Physics.Arcade.Sprite;
+    private player_oldman!: Phaser.Physics.Arcade.Sprite;
     private environment!: Phaser.Physics.Arcade.StaticGroup;
     // keys
     private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
@@ -19,13 +20,13 @@ export default class GameScene extends Phaser.Scene {
     private cellWidth!: integer;
     private cellHeight!: integer; 
     // number of moves made in the horizontal and vertical directions (right and bottom are +ve)
-    private numHor = 0;
-    private numVer = 0;
+        // the tuple contains the corresponding player's relative coordinates
+    private positions: Record<string, [number, number]> = {};
     private moveEvent: Phaser.Time.TimerEvent | null = null;
     // "center" coordinates (because (0,0) isn't really the "center" of this scene) (in real coordinates)
     private centerX!: integer;
     private centerY!: integer;
-    private playerCenterX!: integer; // offsetting the player bit so that it looks nicer
+    private playerCenterX!: integer; // in real coordinates
     private playerCenterY!: integer;
     // music
     private backgroundMusic!: Phaser.Sound.BaseSound;
@@ -35,6 +36,7 @@ export default class GameScene extends Phaser.Scene {
     //      Legend
     //      1: tree
     //      2: path
+    //      11: house #1
     private layout!: number[][];
 
     // table that tracks collidable objects
@@ -53,7 +55,8 @@ export default class GameScene extends Phaser.Scene {
 
     preload() {
         this.load.image("background", "/assets/bg.png");
-        this.load.spritesheet("player", "/assets/player.png", { frameWidth: 48, frameHeight: 48 });
+        this.load.spritesheet("player", "/assets/players/player.png", { frameWidth: 48, frameHeight: 48 });
+        this.load.spritesheet("player_oldman", "/assets/players/player_oldman.png", { frameWidth: 32, frameHeight: 48 });
         this.load.image("github", "/assets/github-mark.png");
         this.load.image("tree", "/assets/tree.png");
         this.load.image("bush", "/assets/bush.png");
@@ -93,6 +96,7 @@ export default class GameScene extends Phaser.Scene {
         // music
         this.load.audio('bgMusic', 'assets/audio/intro.mp3');
         this.load.audio('trap', 'assets/audio/trap.mp3');
+
         // layout
         fetch("/layout.csv") // Adjust the path based on your setup
         .then((response) => response.text()) // Get CSV as a string
@@ -105,7 +109,6 @@ export default class GameScene extends Phaser.Scene {
     }
  
     // set up the scene!
-
     create() {
         this.centerX = window.innerWidth/2;
         this.centerY = window.innerHeight/2;
@@ -114,12 +117,14 @@ export default class GameScene extends Phaser.Scene {
         // character
         this.playerCenterX = this.centerX;
         this.playerCenterY = this.centerY;
-        this.player = this.physics.add.sprite(this.playerCenterX, this.playerCenterY, "player");
+        this.player = this.addCharacter(40, 40, "player");
+        this.player_oldman = this.addCharacter(40, 38, "player_oldman");
         this.player.setCollideWorldBounds(true);
-        this.physics.add.collider(this.player, this.environment);
 
         // character animations
-        this.createAnims();
+        this.createAnims("player");
+        this.createAnims("player_oldman");
+        
         // coordinates
         this.xCoord = this.add.text(20,20,'X: 0', { fontSize: '20px', fill: '#fff', backgroundColor: '#000000',});
         this.xCoord.setScrollFactor(0);
@@ -155,39 +160,52 @@ export default class GameScene extends Phaser.Scene {
         }
     }
 
+    // Positions in relative coordinates
+    addCharacter(positionX: number, positionY: number, name: string) {
+        const realCoord = this.realCoord(positionX, positionY);
+        const player = this.physics.add.sprite(realCoord[0], realCoord[1], name);
+        this.positions[name] = [positionX, positionY];
+
+        return player;
+    }
+
     // returns the player's relative coordinates
-    getPlayerCoords(): number[] {
-        return this.relativeCoord(this.player.x, this.player.y);
+    getPlayerCoords(characterName: string): [number, number] {
+        return this.positions[characterName];
     }
 
     update() {
         this.player.setVelocity(0);
         // update coordinates
-        const relativeCoords = this.getPlayerCoords();
+        const relativeCoords = this.getPlayerCoords("player");
         this.xCoord.setText("X: " + Math.floor(relativeCoords[0]));
         this.yCoord.setText("Y: " + Math.floor(relativeCoords[1]));
 
         // handle initial arrow click (without this section, there's a pause before player moves)
         if (Phaser.Input.Keyboard.JustDown(this.cursors.right)) {
-            this.stopMoving();
-            this.moveCharacter('right')
+            this.stopMoving("player");
+            this.moveCharacter('right', this.player, "player")
             this.arrows.shift()
             this.arrows.push("right")
+            this.moveCharacter("right", this.player_oldman, "player_oldman");
         } else if (Phaser.Input.Keyboard.JustDown(this.cursors.left)) {
-            this.stopMoving();
-            this.moveCharacter('left')
+            this.stopMoving("player");
+            this.moveCharacter('left', this.player, "player")
             this.arrows.shift()
             this.arrows.push("left")
+            this.moveCharacter("left", this.player_oldman, "player_oldman");
         } else if (Phaser.Input.Keyboard.JustDown(this.cursors.up)) {
-            this.stopMoving();
-            this.moveCharacter('up')
+            this.stopMoving("player");
+            this.moveCharacter('up', this.player, "player")
             this.arrows.shift()
             this.arrows.push("up")
+            this.moveCharacter("up", this.player_oldman, "player_oldman");
         } else if (Phaser.Input.Keyboard.JustDown(this.cursors.down)) {
-            this.stopMoving();
-            this.moveCharacter('down')
+            this.stopMoving("player");
+            this.moveCharacter('down', this.player, "player")
             this.arrows.shift()
             this.arrows.push("down")
+            this.moveCharacter("down", this.player_oldman, "player_oldman");
         }
 
         // handle arrow key "press-and-hold"
@@ -291,61 +309,69 @@ export default class GameScene extends Phaser.Scene {
                     this.placeImage(i, j, "path-solo");
                 } else if (allCorners && allSides) {
                     this.placeImage(i, j, "path-mid");
-                } else if (up && right && left && !down && !tr && !tl) {
-                    this.placeImage(i, j, "path-3-up");
-                } else if (!up && right && left && down && !br && !bl) {
-                    this.placeImage(i, j, "path-3-down");
-                } else if (up && right && !left && down && !tr && !br) {
-                    this.placeImage(i, j, "path-3-right");
-                } else if (up && !right && left && down && !tl && !bl) {
-                    this.placeImage(i, j, "path-3-left");
-                } else if (up && right && left && down && !anyCorners) {
-                    this.placeImage(i, j, "path-4");
                 } else if (!up && !down) {
                     this.placeImage(i, j, "path-hor");
                 } else if (!right && !left) {
                     this.placeImage(i, j, "path-ver");
-                } else if (up && right && !left && !down && !tr) {
-                    this.placeImage(i, j, "path-bl");
-                } else if (up && !right && left && !down && !tl) {
-                    this.placeImage(i, j, "path-br");
-                } else if (!up && !right && left && down && !bl) {
-                    this.placeImage(i, j, "path-tr");
-                } else if (!up && right && !left && down && !br) {
-                    this.placeImage(i, j, "path-tl");
-                } else if (up && !right && left && down && bl && tl) {
-                    this.placeImage(i, j, "path-mid-right");
-                } else if (!up && right && left && down && bl && br) {
-                    this.placeImage(i, j, "path-mid-up");
-                } else if (up && right && !left && down && tr && br) {
-                    this.placeImage(i, j, "path-mid-left");
-                } else if (up && right && left && !down && tr && tl) {
-                    this.placeImage(i, j, "path-mid-down");
-                } else if (!up && !right && left && down && bl && !tr) {
-                    this.placeImage(i, j, "path-mid-tr");
-                } else if (!up && right && !left && down && !tl && br) {
-                    this.placeImage(i, j, "path-mid-tl");
-                } else if (up && !right && left && !down && tl && !br) {
-                    this.placeImage(i, j, "path-mid-br");  
-                } else if (up && right && !left && !down && !bl && tr) {
-                    this.placeImage(i, j, "path-mid-bl");
-                } else if (allSides && tl && tr && br && !bl) {
-                    this.placeImage(i, j, "path-anti-bl");
-                } else if (allSides && tl && tr && !br && bl) {
-                    this.placeImage(i, j, "path-anti-br");
-                } else if (allSides && !tl && tr && br && bl) {
-                    this.placeImage(i, j, "path-anti-tl");
-                } else if (allSides && tl && !tr && br && bl) {
-                    this.placeImage(i, j, "path-anti-tr");
-                } else if (allSides && !tl && !tr && br && bl) {
-                    this.placeImage(i, j, "path-funnel-up");
-                } else if (allSides && tl && tr && !br && !bl) {
-                    this.placeImage(i, j, "path-funnel-down");
-                } else if (allSides && tl && !tr && !br && bl) {
-                    this.placeImage(i, j, "path-funnel-right");
-                } else if (allSides && !tl && tr && br && !bl) {
-                    this.placeImage(i, j, "path-funnel-left");
-                }
+                } else if (up) {
+                    if (right) {
+                        if (right && left && !down && !tr && !tl) {
+                            this.placeImage(i, j, "path-3-up");
+                        } else if (right && !left && down && !tr && !br) {
+                            this.placeImage(i, j, "path-3-right");
+                        } else if (right && !left && down && tr && br) {
+                            this.placeImage(i, j, "path-mid-left");
+                        } else if (right && left && !down && tr && tl) {
+                            this.placeImage(i, j, "path-mid-down");
+                        } else if (right && !left && !down && !bl && tr) {
+                            this.placeImage(i, j, "path-mid-bl");
+                        } else if (allSides && tl && tr && br && !bl) {
+                            this.placeImage(i, j, "path-anti-bl");
+                        } else if (allSides && tl && tr && !br && bl) {
+                            this.placeImage(i, j, "path-anti-br");
+                        } else if (allSides && !tl && tr && br && bl) {
+                            this.placeImage(i, j, "path-anti-tl");
+                        } else if (allSides && tl && !tr && br && bl) {
+                            this.placeImage(i, j, "path-anti-tr");
+                        } else if (allSides && !tl && !tr && br && bl) {
+                            this.placeImage(i, j, "path-funnel-up");
+                        } else if (allSides && tl && tr && !br && !bl) {
+                            this.placeImage(i, j, "path-funnel-down");
+                        } else if (allSides && tl && !tr && !br && bl) {
+                            this.placeImage(i, j, "path-funnel-right");
+                        } else if (allSides && !tl && tr && br && !bl) {
+                            this.placeImage(i, j, "path-funnel-left");
+                        }
+                    } else {
+                        if (!right && left && down && !tl && !bl) {
+                            this.placeImage(i, j, "path-3-left");
+                        } else if (!right && left && !down && !tl) {
+                            this.placeImage(i, j, "path-br");
+                        } else if (!right && left && down && bl && tl) {
+                            this.placeImage(i, j, "path-mid-right");
+                        }  else if (!right && left && !down && tl && !br) {
+                            this.placeImage(i, j, "path-mid-br");  
+                        }
+                    }
+                } else if (!up) {
+                    if (right) {
+                        if (!up && right && left && down && !br && !bl) {
+                            this.placeImage(i, j, "path-3-down");
+                        } else if (!up && right && !left && down && !br) {
+                            this.placeImage(i, j, "path-tl");
+                        } else if (!up && right && left && down && bl && br) {
+                            this.placeImage(i, j, "path-mid-up");
+                        } else if (!up && right && !left && down && !tl && br) {
+                            this.placeImage(i, j, "path-mid-tl");
+                        } 
+                    } else {
+                        if (!up && !right && left && down && !bl) {
+                            this.placeImage(i, j, "path-tr");
+                        } else if (!up && !right && left && down && bl && !tr) {
+                            this.placeImage(i, j, "path-mid-tr");
+                        }
+                    }
+                } 
             }
         }
     }
@@ -434,45 +460,46 @@ export default class GameScene extends Phaser.Scene {
         }
     }
 
-    createAnims() {
+    // HARD ASSUMPTION: the character must have 16 frames, 4 per direction (in the order: down, left, right, and up)
+    createAnims(character: string) {
         this.anims.create({
-            key: "left",
-            frames: this.anims.generateFrameNumbers('player', { start: 4, end: 7 }),
+            key: character + "-left",
+            frames: this.anims.generateFrameNumbers(character, { start: 4, end: 7 }),
             frameRate: 10,
             repeat: -1
         });
         this.anims.create({
-            key: "right",
-            frames: this.anims.generateFrameNumbers('player', { start: 8, end: 11 }),
+            key: character + "-right",
+            frames: this.anims.generateFrameNumbers(character, { start: 8, end: 11 }),
             frameRate: 10,
             repeat: -1
         });  
         this.anims.create({
-            key: "down",
-            frames: this.anims.generateFrameNumbers('player', { start: 0, end: 3 }),
+            key: character + "-down",
+            frames: this.anims.generateFrameNumbers(character, { start: 0, end: 3 }),
             frameRate: 10,
             repeat: -1
         });
         this.anims.create({
-            key: "up",
-            frames: this.anims.generateFrameNumbers('player', { start: 12, end: 15 }),
+            key: character + "-up",
+            frames: this.anims.generateFrameNumbers(character, { start: 12, end: 15 }),
             frameRate: 10,
             repeat: -1
         });
         this.anims.create({
-            key: "still",
-            frames: [{key: "player", frame: 0}],
+            key: character + "-still",
+            frames: [{key: character, frame: 0}],
             frameRate: 10,
             repeat: -1
         });
     }
 
-    stopMoving() {
+    stopMoving(character: string) {
         if (this.moveEvent) {
             this.moveEvent.remove(); // Stop the movement loop
             this.moveEvent = null;
         }
-        this.player.anims.play('still')
+        this.player.anims.play(character + '-still')
     }
 
     // helper for deciding how player should move
@@ -499,17 +526,17 @@ export default class GameScene extends Phaser.Scene {
         } else if (this.arrows[0] == 'down') {
             this.startMoving('down')
         } else {
-            this.stopMoving();
+            this.stopMoving("player");
         }
     }
 
     // helper for actually moving the player
-    moveCharacter(direction: string) {
-        const relativeCoords = this.getPlayerCoords();
+    moveCharacter(direction: string, character: Phaser.Physics.Arcade.Sprite, characterName: string) {
+        const relativeCoords = this.getPlayerCoords(characterName); // TODO: abstract to work for any character
 
         switch (direction) {
-            case "left":
-                if (this.player.x - 50 < -this.bgWidth/2 + window.innerWidth) {
+            case "left": {
+                if (character.x - 50 < -this.bgWidth/2 + window.innerWidth) {
                     console.log("player out of bounds")
                     return
                 }
@@ -518,29 +545,31 @@ export default class GameScene extends Phaser.Scene {
                     console.log("cannot move through solid object")
                     return
                 }
-                
-                this.numHor -= 1;
+
+                this.positions[characterName][0] -= 1;
+                const horizontalCoord = this.realCoord(this.positions[characterName][0], 0)[0]; // putting 0 in as the y value bc it doesn't matter
+
                 this.tweens.add({
-                    targets: this.player,  
-                    x: this.playerCenterX + this.numHor * this.cellWidth, 
+                    targets: character,  
+                    x: horizontalCoord, 
                     duration: this.delay,         
                     ease: 'Linear',        
                     repeat: 0,             
                     yoyo: false,
                     onStart: () => {
-                        this.player.anims.play('left');
+                        character.anims.play(characterName + '-left');
                     },
                     // TODO: abstract this part into its own function
                     onUpdate: (tween: Phaser.Tweens.Tween) => {
-                        const relativeCoords = this.getPlayerCoords();
+                        const relativeCoords = this.getPlayerCoords(characterName);
                         if (this.collidableLayout[relativeCoords[1]][relativeCoords[0]] == 1) {
                             tween.stop();
                         }
                     }
                 });
-                break;
-            case "right":
-                if (this.player.x + 50 >= this.bgWidth/2) {
+                break;}
+            case "right": {
+                if (character.x + 50 >= this.bgWidth/2) {
                     console.log("player out of bounds");
                     return
                 }
@@ -550,57 +579,61 @@ export default class GameScene extends Phaser.Scene {
                     return
                 }
 
-                this.numHor += 1
+                this.positions[characterName][0] += 1
+                const horizontalCoord = this.realCoord(this.positions[characterName][0], 0)[0]; // putting 0 in as the y value bc it doesn't matter
+
                 this.tweens.add({
-                    targets: this.player,  
-                    x: this.playerCenterX + this.numHor * this.cellWidth, 
+                    targets: character,  
+                    x: horizontalCoord,
                     duration: this.delay,         
                     ease: 'Linear',        
                     repeat: 0,             
                     yoyo: false,
                     onStart: () => {
-                        this.player.anims.play('right');
+                        character.anims.play(characterName + '-right');
                     },
                     onUpdate: (tween: Phaser.Tweens.Tween) => {
-                        const relativeCoords = this.getPlayerCoords();
-                        if (this.collidableLayout[relativeCoords[1]][relativeCoords[0] + 1] == 1) {
-                            tween.stop();
-                        }
-                    }
-                });
-                break;
-            case "up":
-                if (this.player.y - 50 < -this.bgHeight/2 + window.innerHeight) {
-                    console.log("player out of bounds")
-                    return
-                }
-
-                if (this.collidableLayout[relativeCoords[1]][relativeCoords[0]] == 1) {
-                    console.log("cannot move through solid object")
-                    return
-                }
-
-                this.numVer -= 1;
-                this.tweens.add({
-                    targets: this.player,  
-                    y: this.playerCenterY + this.numVer * this.cellHeight, 
-                    duration: this.delay,         
-                    ease: 'Linear',        
-                    repeat: 0,             
-                    yoyo: false,
-                    onStart: () => {
-                        this.player.anims.play('up');
-                    },
-                    onUpdate: (tween: Phaser.Tweens.Tween) => {
-                        const relativeCoords = this.getPlayerCoords();
+                        const relativeCoords = this.getPlayerCoords(characterName);
                         if (this.collidableLayout[relativeCoords[1]][relativeCoords[0]] == 1) {
                             tween.stop();
                         }
                     }
                 });
-                break;
-            case "down":
-                if (this.player.y + 50 >= this.bgHeight/2) {
+                break;}
+            case "up": {    
+                if (character.y - 50 < -this.bgHeight/2 + window.innerHeight) {
+                    console.log("player out of bounds")
+                    return
+                }
+
+                if (this.collidableLayout[relativeCoords[1] - 1][relativeCoords[0]] == 1) {
+                    console.log("cannot move through solid object")
+                    return
+                }
+
+                this.positions[characterName][1] -= 1;
+                const verticalCoord = this.realCoord(0, this.positions[characterName][1])[1]; // putting 0 in as the y value bc it doesn't matter
+
+                this.tweens.add({
+                    targets: character,  
+                    y: verticalCoord, 
+                    duration: this.delay,         
+                    ease: 'Linear',        
+                    repeat: 0,             
+                    yoyo: false,
+                    onStart: () => {
+                        character.anims.play(characterName + '-up');
+                    },
+                    onUpdate: (tween: Phaser.Tweens.Tween) => {
+                        const relativeCoords = this.getPlayerCoords(characterName);
+                        if (this.collidableLayout[relativeCoords[1]][relativeCoords[0]] == 1) {
+                            tween.stop();
+                        }
+                    }
+                });
+                break;}
+            case "down": {
+                if (character.y + 50 >= this.bgHeight/2) {
                     console.log("player out of bounds")
                     return
                 }
@@ -610,25 +643,30 @@ export default class GameScene extends Phaser.Scene {
                     return
                 }
 
-                this.numVer += 1;
+                this.positions[characterName][1] += 1;
+                const verticalCoord = this.realCoord(0, this.positions[characterName][1])[1]; // putting 0 in as the y value bc it doesn't matter
+                
                 this.tweens.add({
-                    targets: this.player,  
-                    y: this.playerCenterY + this.numVer * this.cellHeight, 
+                    targets: character,  
+                    y: verticalCoord, 
                     duration: this.delay,         
                     ease: 'Linear',        
                     repeat: 0,             
                     yoyo: false,
                     onStart: () => {
-                        this.player.anims.play('down');
+                        character.anims.play(characterName + '-down');
                     },
                     onUpdate: (tween: Phaser.Tweens.Tween) => {
-                        const relativeCoords = this.getPlayerCoords();
-                        if (this.collidableLayout[relativeCoords[1] + 1][relativeCoords[0]] == 1) {
+                        const relativeCoords = this.getPlayerCoords(characterName);
+                        // const nextX = character.x
+                        // const nextY = character.y + 300
+                        // const nextRelativePosition = this.relativeCoord(nextX, nextY)
+                        if (this.collidableLayout[relativeCoords[1]][relativeCoords[0]] == 1) {
                             tween.stop();
                         }
                     }
                 });
-                break;
+                break;}
         }
     
     }
@@ -640,7 +678,7 @@ export default class GameScene extends Phaser.Scene {
             delay: this.delay,
             loop: true,
             callback: () => {
-                this.moveCharacter(direction);
+                this.moveCharacter(direction, this.player, "player");
             }
             
         })
