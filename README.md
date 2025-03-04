@@ -35,6 +35,10 @@ Legend:
 - improve collision detection (player shouldn't be able to move "into" the tree at all (it currently moves into the tree slightly))
 
 # Progress
+Day 8 (collision detection and simple NPC):
+<br>
+![ScreenRecording2025-03-04at5 51 14AMonline-video-cutter com-ezgif com-video-to-gif-converter](https://github.com/user-attachments/assets/e6ff77d3-fdb2-491b-940a-b97452f701d3)
+
 Day 3:
 <br>
 ![ScreenRecording2025-02-27at2 37 52PM-ezgif com-cut](https://github.com/user-attachments/assets/dec4d111-4e43-441e-b609-a9653a531585)
