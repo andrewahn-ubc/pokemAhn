@@ -4,7 +4,8 @@ export default class GameScene extends Phaser.Scene {
     private bg!: Phaser.GameObjects.Image;
     private player!: Phaser.Physics.Arcade.Sprite;
     private player_oldman!: Phaser.Physics.Arcade.Sprite;
-    private environment!: Phaser.Physics.Arcade.StaticGroup;
+    private characters: Record<string, Phaser.Physics.Arcade.Sprite> = {};
+    private closeToNPC: boolean = false;
     // keys
     private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
     private spaceKey!: Phaser.Input.Keyboard.Key;
@@ -22,16 +23,16 @@ export default class GameScene extends Phaser.Scene {
     // number of moves made in the horizontal and vertical directions (right and bottom are +ve)
         // the tuple contains the corresponding player's relative coordinates
     private positions: Record<string, [number, number]> = {};
+    private mostRecentPlayerMove!: string;
     private moveEvent: Phaser.Time.TimerEvent | null = null;
+    private npcMoveEvents: Record<string, Phaser.Time.TimerEvent> = {};
     // "center" coordinates (because (0,0) isn't really the "center" of this scene) (in real coordinates)
     private centerX!: integer;
     private centerY!: integer;
-    private playerCenterX!: integer; // in real coordinates
-    private playerCenterY!: integer;
     // music
     private backgroundMusic!: Phaser.Sound.BaseSound;
     // character movement
-    private delay = 200; // 200 is optimal
+    private delay: Record<string, number> = {"player": 200, "player_oldman": 600};
     // layout
     //      Legend
     //      1: tree
@@ -115,10 +116,10 @@ export default class GameScene extends Phaser.Scene {
         this.environment = this.physics.add.staticGroup(); // create static group that the player will collide with
         this.setUpWorld();
         // character
-        this.playerCenterX = this.centerX;
-        this.playerCenterY = this.centerY;
         this.player = this.addCharacter(40, 40, "player");
-        this.player_oldman = this.addCharacter(40, 38, "player_oldman");
+        this.characters["player"] = this.player;
+        this.player_oldman = this.addCharacter(38, 38, "player_oldman");
+        this.characters["player_oldman"] = this.player_oldman;
         this.player.setCollideWorldBounds(true);
 
         // character animations
@@ -180,32 +181,34 @@ export default class GameScene extends Phaser.Scene {
         const relativeCoords = this.getPlayerCoords("player");
         this.xCoord.setText("X: " + Math.floor(relativeCoords[0]));
         this.yCoord.setText("Y: " + Math.floor(relativeCoords[1]));
+        this.startMovingNPC(this.player_oldman, "player_oldman")
+        this.handleNPCNearPlayer("player_oldman");
 
         // handle initial arrow click (without this section, there's a pause before player moves)
         if (Phaser.Input.Keyboard.JustDown(this.cursors.right)) {
             this.stopMoving("player");
             this.moveCharacter('right', this.player, "player")
+            this.mostRecentPlayerMove = "right"
             this.arrows.shift()
             this.arrows.push("right")
-            this.moveCharacter("right", this.player_oldman, "player_oldman");
         } else if (Phaser.Input.Keyboard.JustDown(this.cursors.left)) {
             this.stopMoving("player");
             this.moveCharacter('left', this.player, "player")
+            this.mostRecentPlayerMove = "left"
             this.arrows.shift()
             this.arrows.push("left")
-            this.moveCharacter("left", this.player_oldman, "player_oldman");
         } else if (Phaser.Input.Keyboard.JustDown(this.cursors.up)) {
             this.stopMoving("player");
             this.moveCharacter('up', this.player, "player")
+            this.mostRecentPlayerMove = "up"
             this.arrows.shift()
             this.arrows.push("up")
-            this.moveCharacter("up", this.player_oldman, "player_oldman");
         } else if (Phaser.Input.Keyboard.JustDown(this.cursors.down)) {
             this.stopMoving("player");
             this.moveCharacter('down', this.player, "player")
+            this.mostRecentPlayerMove = "down"
             this.arrows.shift()
             this.arrows.push("down")
-            this.moveCharacter("down", this.player_oldman, "player_oldman");
         }
 
         // handle arrow key "press-and-hold"
@@ -487,19 +490,29 @@ export default class GameScene extends Phaser.Scene {
             repeat: -1
         });
         this.anims.create({
-            key: character + "-still",
+            key: character + "-still-down",
             frames: [{key: character, frame: 0}],
             frameRate: 10,
             repeat: -1
         });
-    }
-
-    stopMoving(character: string) {
-        if (this.moveEvent) {
-            this.moveEvent.remove(); // Stop the movement loop
-            this.moveEvent = null;
-        }
-        this.player.anims.play(character + '-still')
+        this.anims.create({
+            key: character + "-still-up",
+            frames: [{key: character, frame: 12}],
+            frameRate: 10,
+            repeat: -1
+        });
+        this.anims.create({
+            key: character + "-still-left",
+            frames: [{key: character, frame: 4}],
+            frameRate: 10,
+            repeat: -1
+        });
+        this.anims.create({
+            key: character + "-still-right",
+            frames: [{key: character, frame: 8}],
+            frameRate: 10,
+            repeat: -1
+        });
     }
 
     // helper for deciding how player should move
@@ -552,7 +565,7 @@ export default class GameScene extends Phaser.Scene {
                 this.tweens.add({
                     targets: character,  
                     x: horizontalCoord, 
-                    duration: this.delay,         
+                    duration: this.delay[characterName],         
                     ease: 'Linear',        
                     repeat: 0,             
                     yoyo: false,
@@ -564,6 +577,11 @@ export default class GameScene extends Phaser.Scene {
                         const relativeCoords = this.getPlayerCoords(characterName);
                         if (this.collidableLayout[relativeCoords[1]][relativeCoords[0]] == 1) {
                             tween.stop();
+                        }
+                    },
+                    onComplete: () => {
+                        if (characterName !== "player") {
+                            character.anims.play(characterName + '-still-left')
                         }
                     }
                 });
@@ -585,7 +603,7 @@ export default class GameScene extends Phaser.Scene {
                 this.tweens.add({
                     targets: character,  
                     x: horizontalCoord,
-                    duration: this.delay,         
+                    duration: this.delay[characterName],         
                     ease: 'Linear',        
                     repeat: 0,             
                     yoyo: false,
@@ -596,6 +614,11 @@ export default class GameScene extends Phaser.Scene {
                         const relativeCoords = this.getPlayerCoords(characterName);
                         if (this.collidableLayout[relativeCoords[1]][relativeCoords[0]] == 1) {
                             tween.stop();
+                        }
+                    },
+                    onComplete: () => {
+                        if (characterName !== "player") {
+                            character.anims.play(characterName + '-still-right')
                         }
                     }
                 });
@@ -617,7 +640,7 @@ export default class GameScene extends Phaser.Scene {
                 this.tweens.add({
                     targets: character,  
                     y: verticalCoord, 
-                    duration: this.delay,         
+                    duration: this.delay[characterName],         
                     ease: 'Linear',        
                     repeat: 0,             
                     yoyo: false,
@@ -629,6 +652,11 @@ export default class GameScene extends Phaser.Scene {
                         if (this.collidableLayout[relativeCoords[1]][relativeCoords[0]] == 1) {
                             tween.stop();
                         }
+                    },
+                    onComplete: () => {
+                        if (characterName !== "player") {
+                            character.anims.play(characterName + '-still-up')
+                        } 
                     }
                 });
                 break;}
@@ -649,7 +677,7 @@ export default class GameScene extends Phaser.Scene {
                 this.tweens.add({
                     targets: character,  
                     y: verticalCoord, 
-                    duration: this.delay,         
+                    duration: this.delay[characterName],         
                     ease: 'Linear',        
                     repeat: 0,             
                     yoyo: false,
@@ -664,6 +692,11 @@ export default class GameScene extends Phaser.Scene {
                         if (this.collidableLayout[relativeCoords[1]][relativeCoords[0]] == 1) {
                             tween.stop();
                         }
+                    },
+                    onComplete: () => {
+                        if (characterName !== "player") {
+                            character.anims.play(characterName + '-still-down')
+                        } 
                     }
                 });
                 break;}
@@ -671,16 +704,111 @@ export default class GameScene extends Phaser.Scene {
     
     }
 
+    // encodes random movement of NPCs
+    startMovingNPC(character: Phaser.Physics.Arcade.Sprite, characterName: string) {
+        if (this.npcMoveEvents[characterName]) return;
+
+        this.npcMoveEvents[characterName] = this.time.addEvent({
+            delay: this.delay[characterName]*3,
+            loop: true,
+            callback: () => {
+                // randomized movement implemented here
+                const actionList = ["left", "right", "up", "down"]
+                const listSize = actionList.length
+                const randomIndex = Math.floor(Math.random()*listSize)
+                const randomAction = actionList[randomIndex]
+
+                this.moveCharacter(randomAction, character, characterName);
+                // character.anims.play(characterName + '-still')
+            }
+        })
+    }
+
+    stopMovingNPC(character: string) {
+        if (this.npcMoveEvents[character]) {
+            this.npcMoveEvents[character].remove();
+            this.npcMoveEvents[character] = null; // not sure why this error pops up, since it clearly works
+        }
+    }
+
+    handleNPCNearPlayer(characterName: string) {
+        const inProximity = this.checkProximity(this.positions[characterName], this.positions["player"]);
+
+        const opposites: Record<string, string> = {
+            "left": "right",
+            "right": "left",
+            "up": "down",
+            "down": "up"
+        }
+
+        if (inProximity) {
+            this.closeToNPC = true;
+            this.stopMovingNPC(characterName);
+            const relativePosition = this.checkRelativePosition(this.positions[characterName], this.positions["player"]);
+            this.characters[characterName].anims.play(characterName + '-still-' + relativePosition);
+            this.player.anims.play("player-still-" + opposites[relativePosition]);
+        } else {
+            this.closeToNPC = false;
+            this.startMovingNPC(this.characters[characterName], characterName);
+        }
+    }
+
+    checkProximity(npcPosition: [number, number], playerPosition: [number, number]) {
+        const npcX = npcPosition[0];
+        const npcY = npcPosition[1];
+        const playerX = playerPosition[0];
+        const playerY = playerPosition[1];
+
+        const xDifference = npcX - playerX
+        const yDifference = npcY - playerY
+
+        if (Math.max(xDifference, -xDifference) <= 1 && Math.max(yDifference, -yDifference) <= 1) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    // check the relative position of the player to the NPC (assuming player is within 1 tile of the NPC)
+    // a value of "left" means the player is on the left side of the NPC
+    checkRelativePosition(npcPosition: [number, number], playerPosition: [number, number]) {
+        const npcX = npcPosition[0];
+        const npcY = npcPosition[1];
+        const playerX = playerPosition[0];
+        const playerY = playerPosition[1];
+
+        if (npcX > playerX) {
+            return "left"
+        } else if (npcX < playerX) {
+            return "right"
+        } else if (npcY > playerY) {
+            return "up"
+        } else if (npcY < playerY) {
+            return "down"
+        } else {
+            return "left"
+        }
+    }
+
     startMoving(direction: string) {
         if (this.moveEvent) return;
 
         this.moveEvent = this.time.addEvent({
-            delay: this.delay,
+            delay: this.delay["player"],
             loop: true,
             callback: () => {
                 this.moveCharacter(direction, this.player, "player");
             }
             
         })
+    }
+
+    // only for the main player
+    stopMoving(character: string) {
+        if (this.moveEvent) {
+            this.moveEvent.remove(); // Stop the movement loop
+            this.moveEvent = null;
+        }
+        if (this.mostRecentPlayerMove && !this.closeToNPC) this.player.anims.play(character + '-still-' + this.mostRecentPlayerMove);
     }
 }
