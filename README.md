@@ -23,18 +23,21 @@ This is probably my favourite feature of this project, and it's cool because it 
 
 <br>
 Legend
-- 0: nothing
-- 1: tree
-- 2: path
-- 3: bush
-- 4: white flower
-- 5: red and white flower
-- 6: red flower
-- 7: nice bush
-- 8: flowerbed
-- 9: short tree
-- 11: house #1
-- 12: house #2
+
+1. Nothing  
+2. Tree  
+3. Path  
+4. Bush  
+5. White flower  
+6. Red and white flower  
+7. Red flower  
+8. Nice bush  
+9. Flowerbed  
+10. Short tree  
+11. Rocks  
+12. House #1  
+13. House #2  
+
 
 <br>
 

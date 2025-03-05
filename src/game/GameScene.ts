@@ -44,6 +44,7 @@ export default class GameScene extends Phaser.Scene {
     //      7: nice bush
     //      8: flowerbed
     //      9: short tree
+    //      10: rocks
     //      11: house #1
     //      12: house #2
     private layout!: number[][];
@@ -75,6 +76,7 @@ export default class GameScene extends Phaser.Scene {
         this.load.image("flower-red", "/assets/flower_red.png");
         this.load.image("nice-bush", "/assets/nice_bush.png");
         this.load.image("flowerbed", "/assets/flowerbed.png");
+        this.load.image("rocks", "/assets/rocks.png");
         // paths
         this.load.image("path-ver", "/assets/paths/path_ver.png");
         this.load.image("path-hor", "/assets/paths/path_hor.png");
@@ -439,6 +441,8 @@ export default class GameScene extends Phaser.Scene {
                     this.placeImage(i, j, "nice-bush");
                 } else if (this.layout[j][i] == 9) {
                     this.placeImage(i, j, "tree-short");
+                } else if (this.layout[j][i] == 10) {
+                    this.placeImage(i, j, "rocks");
                 } else if (this.layout[j][i] == 11 && this.layout[j - 1][i] != 11 && this.layout[j - 1][i] != 11) {
                     this.placeImage(i, j, "house-1");
                     
