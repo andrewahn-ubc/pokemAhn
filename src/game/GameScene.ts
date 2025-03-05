@@ -682,7 +682,7 @@ export default class GameScene extends Phaser.Scene {
         if (this.npcMoveEvents[characterName]) return;
 
         this.npcMoveEvents[characterName] = this.time.addEvent({
-            delay: this.delay[characterName]*3,
+            delay: this.delay[characterName]*5,
             loop: true,
             callback: () => {
                 // randomized movement implemented here
