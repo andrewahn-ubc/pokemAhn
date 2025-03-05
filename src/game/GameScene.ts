@@ -109,6 +109,14 @@ export default class GameScene extends Phaser.Scene {
         this.load.image("path-end-up", "/assets/paths/path_end_up.png");
         this.load.image("path-end-right", "/assets/paths/path_end_right.png");
         this.load.image("path-end-down", "/assets/paths/path_end_down.png");
+        this.load.image("path-right-tl", "/assets/paths/path_right_tl.png");
+        this.load.image("path-right-bl", "/assets/paths/path_right_bl.png");
+        this.load.image("path-left-tr", "/assets/paths/path_left_tr.png");
+        this.load.image("path-left-br", "/assets/paths/path_left_br.png");
+        this.load.image("path-up-br", "/assets/paths/path_up_br.png");
+        this.load.image("path-up-bl", "/assets/paths/path_up_bl.png");
+        this.load.image("path-down-tr", "/assets/paths/path_down_tr.png");
+        this.load.image("path-down-tl", "/assets/paths/path_down_tl.png");
         // buildings
         this.load.image("house-1", "/assets/house_1.png");
         this.load.image("house-2", "/assets/house_2.png");
@@ -357,6 +365,14 @@ export default class GameScene extends Phaser.Scene {
                             this.placeImage(i, j, "path-funnel-left");
                         } else if (!left && !down && !bl) {
                             this.placeImage(i, j, "path-bl");
+                        } else if (!tr && !left && down && br) {
+                            this.placeImage(i, j, "path-left-tr");
+                        } else if (tr && !left && down && !br) {
+                            this.placeImage(i, j, "path-left-br");
+                        } else if (!tr && left && !down && tl) {
+                            this.placeImage(i, j, "path-down-tr");
+                        } else if (tr && left && !down && !tl) {
+                            this.placeImage(i, j, "path-down-tl");
                         }
                     } else if (!right) {
                         if (left && down && !tl && !bl) {
@@ -369,6 +385,10 @@ export default class GameScene extends Phaser.Scene {
                             this.placeImage(i, j, "path-mid-br");  
                         } else if (!left && !down) {
                             this.placeImage(i, j, "path-end-down");
+                        } else if (!tl && left && down && bl) {
+                            this.placeImage(i, j, "path-right-tl");
+                        } else if (tl && left && down && !bl) {
+                            this.placeImage(i, j, "path-right-tl");
                         }
                     }
                 } else if (!up) {
@@ -383,6 +403,10 @@ export default class GameScene extends Phaser.Scene {
                             this.placeImage(i, j, "path-mid-tl");
                         } else if (!down && !left) {
                             this.placeImage(i, j, "path-end-left");
+                        } else if (bl && left && down && !br) {
+                            this.placeImage(i, j, "path-up-br");
+                        } else if (!bl && left && down && br) {
+                            this.placeImage(i, j, "path-up-bl");
                         }
                     } else if (!right) {
                         if (left && down && !bl) {
