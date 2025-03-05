@@ -105,6 +105,10 @@ export default class GameScene extends Phaser.Scene {
         this.load.image("path-funnel-down", "/assets/paths/path_funnel_down.png");
         this.load.image("path-funnel-right", "/assets/paths/path_funnel_right.png");
         this.load.image("path-funnel-left", "/assets/paths/path_funnel_left.png");
+        this.load.image("path-end-left", "/assets/paths/path_end_left.png");
+        this.load.image("path-end-up", "/assets/paths/path_end_up.png");
+        this.load.image("path-end-right", "/assets/paths/path_end_right.png");
+        this.load.image("path-end-down", "/assets/paths/path_end_down.png");
         // buildings
         this.load.image("house-1", "/assets/house_1.png");
         this.load.image("house-2", "/assets/house_2.png");
@@ -319,9 +323,9 @@ export default class GameScene extends Phaser.Scene {
                     this.placeImage(i, j, "path-solo");
                 } else if (allCorners && allSides) {
                     this.placeImage(i, j, "path-mid");
-                } else if (!up && !down) {
+                } else if (!up && !down && left && right) {
                     this.placeImage(i, j, "path-hor");
-                } else if (!right && !left) {
+                } else if (!right && !left && up && down) {
                     this.placeImage(i, j, "path-ver");
                 } else if (up) {
                     if (right) {
@@ -351,16 +355,20 @@ export default class GameScene extends Phaser.Scene {
                             this.placeImage(i, j, "path-funnel-right");
                         } else if (allSides && !tl && tr && br && !bl) {
                             this.placeImage(i, j, "path-funnel-left");
+                        } else if (!left && !down && !bl) {
+                            this.placeImage(i, j, "path-bl");
                         }
-                    } else {
-                        if (!right && left && down && !tl && !bl) {
+                    } else if (!right) {
+                        if (left && down && !tl && !bl) {
                             this.placeImage(i, j, "path-3-left");
-                        } else if (!right && left && !down && !tl) {
+                        } else if (left && !down && !tl) {
                             this.placeImage(i, j, "path-br");
-                        } else if (!right && left && down && bl && tl) {
+                        } else if (left && down && bl && tl) {
                             this.placeImage(i, j, "path-mid-right");
-                        }  else if (!right && left && !down && tl && !br) {
+                        } else if (left && !down && tl && !br) {
                             this.placeImage(i, j, "path-mid-br");  
+                        } else if (!left && !down) {
+                            this.placeImage(i, j, "path-end-down");
                         }
                     }
                 } else if (!up) {
@@ -373,12 +381,18 @@ export default class GameScene extends Phaser.Scene {
                             this.placeImage(i, j, "path-mid-up");
                         } else if (!up && right && !left && down && !tl && br) {
                             this.placeImage(i, j, "path-mid-tl");
-                        } 
-                    } else {
-                        if (!up && !right && left && down && !bl) {
+                        } else if (!down && !left) {
+                            this.placeImage(i, j, "path-end-left");
+                        }
+                    } else if (!right) {
+                        if (left && down && !bl) {
                             this.placeImage(i, j, "path-tr");
-                        } else if (!up && !right && left && down && bl && !tr) {
+                        } else if (left && down && bl && !tr) {
                             this.placeImage(i, j, "path-mid-tr");
+                        } else if (!left && down) {
+                            this.placeImage(i, j, "path-end-up");
+                        } else if (left && !down) {
+                            this.placeImage(i, j, "path-end-right");
                         }
                     }
                 } 
