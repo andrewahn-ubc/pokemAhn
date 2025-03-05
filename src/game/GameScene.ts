@@ -143,7 +143,7 @@ export default class GameScene extends Phaser.Scene {
         this.centerY = window.innerHeight/2;
         this.setUpWorld();
         // character
-        this.player = this.addCharacter(40, 40, "player");
+        this.player = this.addCharacter(21, 15, "player");
         this.player_oldman = this.addCharacter(38, 38, "player_oldman");
         this.player.setCollideWorldBounds(true);
 
@@ -443,7 +443,7 @@ export default class GameScene extends Phaser.Scene {
                     this.placeImage(i, j, "tree-short");
                 } else if (this.layout[j][i] == 10) {
                     this.placeImage(i, j, "rocks");
-                } else if (this.layout[j][i] == 11 && this.layout[j - 1][i] != 11 && this.layout[j - 1][i] != 11) {
+                } else if (this.layout[j][i] == 11 && this.layout[j - 1][i] != 11 && this.layout[j][i - 1] != 11) {
                     this.placeImage(i, j, "house-1");
                     
                     this.collidableLayout[j ][i + 1] = 1;
