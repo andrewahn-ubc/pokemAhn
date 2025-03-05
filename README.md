@@ -43,12 +43,11 @@ Legend
 
 
 # TODO
-- take care of more edge cases for path generation (the one where 3 sides and 1 corner are path, and the end of single-width paths)
-- implement NPCs (just walking around is fine for now, dialogue can come later) (almost done, just need to confine NPCs to certain areas)
+- confine NPCs to certain areas and make them collidable with the player
 - implement dialogue with NPCs
 - implement signs that display a popup
 - implement other scenes (when the player "enters" a house, for example)
-- some actual gameplay?
+- some actual gameplay? (pokemon, pokemon battles, lore, etc.)
 
 # Progress
 Day 8 (collision detection and simple NPC):
