@@ -5,7 +5,7 @@ Inspired by old-school Nintendo Pokemon games ^-^ Built using Phaser 3, React, a
 ## How to Play
 Arrow keys: move player/navigate the map
 Space bar: pause/resume music
-f: switch song
+m: switch song
 +/-: zoom in/out
 
 # If you're curious about how it works
@@ -43,11 +43,11 @@ Legend
 
 
 # TODO
+- refactor player and NPC logic into separate classes (so that I can reuse them in other scenes)
+- implement other scenes (when the player "enters" a house, for example)
 - confine NPCs to certain areas and make them collidable with the player
 - implement dialogue with NPCs
 - implement signs that display a popup
-- implement other scenes (when the player "enters" a house, for example)
-- some actual gameplay? (pokemon, pokemon battles, lore, etc.)
 
 # Progress
 Day 8 (collision detection and simple NPC):

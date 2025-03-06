@@ -20,9 +20,12 @@ export default class HomeScene extends Phaser.Scene {
         // this.player = this.addCharacter(this.spawnX, this.spawnY, "player");
 
         this.input.manager.enabled = true;
-        this.input.once("pointerdown", () => {
-            this.scene.start("GameScene", { x: 21, y: 13 })
-        }, this)
+
+        if (this.input.keyboard) {
+            this.input.keyboard.on("keydown-ENTER", () => {
+                this.scene.start("GameScene", { x: 21, y: 13 })
+            })
+        }
     }
 
     update() {

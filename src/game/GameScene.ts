@@ -305,10 +305,11 @@ export default class GameScene extends Phaser.Scene {
         const currCoord = this.getPlayerCoords("player");
         // TODO: edit the line below so that can do this.enterable[x][y] instead of [y][x] (more intuitive)
         if (this.enterable[currCoord[1]][currCoord[0]] !== 0) {
-            this.input.once("pointerdown", () => {
+            if (!this.input.keyboard) return;
+            this.input.keyboard.on("keydown-ENTER", () => {
                 this.backgroundMusic.pause();
                 this.scene.start("HomeScene")
-            }, this)
+            })
         }
     }
 
