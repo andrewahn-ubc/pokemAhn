@@ -49,6 +49,13 @@ export default class GameScene extends Phaser.Scene {
     //      12: house #2
     private layout!: number[][];
 
+    // table that tracks which locations on the map can trigger a new scene - which locations the player can "enter" a new location,
+    // as well as which scene a certain location can trigger
+    //      Legend
+    //      0: not enterable
+    //      1: HomeScene
+    private enterable: number[][] = new Array(this.dimension).fill(null).map(() => new Array(this.dimension).fill(0));
+
     // table that tracks collidable objects
     //      Legend
     //      0: nothing - player can pass through
@@ -64,10 +71,10 @@ export default class GameScene extends Phaser.Scene {
     // load the assets
 
     preload() {
+        // this.load.setBaseURL('https://cdn.phaserfiles.com/v385');
         this.load.image("background", "/assets/bg.png");
         this.load.spritesheet("player", "/assets/players/player.png", { frameWidth: 48, frameHeight: 48 });
         this.load.spritesheet("player_oldman", "/assets/players/player_oldman.png", { frameWidth: 32, frameHeight: 48 });
-        this.load.image("github", "/assets/github-mark.png");
         this.load.image("tree", "/assets/tree.png");
         this.load.image("tree-short", "/assets/tree_short.png");
         this.load.image("bush", "/assets/bush.png");
@@ -146,10 +153,6 @@ export default class GameScene extends Phaser.Scene {
         this.player = this.addCharacter(21, 15, "player");
         this.player_oldman = this.addCharacter(38, 38, "player_oldman");
         this.player.setCollideWorldBounds(true);
-
-        // character animations
-        this.createAnims("player");
-        this.createAnims("player_oldman");
         
         // coordinates
         this.xCoord = this.add.text(20,20,'X: 0', { fontSize: '20px', fill: '#fff', backgroundColor: '#000000',});
@@ -190,21 +193,8 @@ export default class GameScene extends Phaser.Scene {
                 this.backgroundMusic.play();
             });
         }
-    }
 
-    // Positions in relative coordinates
-    addCharacter(positionX: number, positionY: number, name: string) {
-        const realCoord = this.realCoord(positionX, positionY);
-        const player = this.physics.add.sprite(realCoord[0], realCoord[1], name);
-        this.positions[name] = [positionX, positionY];
-        this.characters[name] = player;
-
-        return player;
-    }
-
-    // returns the player's relative coordinates
-    getPlayerCoords(characterName: string): [number, number] {
-        return this.positions[characterName];
+        this.input.manager.enabled = true;
     }
 
     update() {
@@ -253,6 +243,26 @@ export default class GameScene extends Phaser.Scene {
         if (this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.MINUS).isDown) {
             this.cameras.main.setZoom(Phaser.Math.Clamp(this.cameras.main.zoom - 0.03, 0.1, 2));
         }
+
+        // allow player to enter different scenes if at the correct location and if triggered
+        this.handleScenes();
+    }
+
+    // Positions in relative coordinates
+    addCharacter(positionX: number, positionY: number, name: string) {
+        const realCoord = this.realCoord(positionX, positionY);
+        const player = this.physics.add.sprite(realCoord[0], realCoord[1], name);
+        this.positions[name] = [positionX, positionY];
+        this.characters[name] = player;
+
+        this.createAnims(name);
+
+        return player;
+    }
+
+    // returns the player's relative coordinates
+    getPlayerCoords(characterName: string): [number, number] {
+        return this.positions[characterName];
     }
 
     setUpWorld() {
@@ -276,6 +286,16 @@ export default class GameScene extends Phaser.Scene {
         this.placeTreesAndFlowerbeds();
         this.placePath();
         this.placeLayout();
+    }
+
+    handleScenes() {
+        const currCoord = this.getPlayerCoords("player");
+        // TODO: edit the line below so that can do this.enterable[x][y] instead of [y][x] (more intuitive)
+        if (this.enterable[currCoord[1]][currCoord[0]] !== 0) {
+            this.input.once("pointerdown", () => {
+                this.scene.start("HomeScene")
+            }, this)
+        }
     }
 
     // takes in relative coordinates and outputs real coordinates
@@ -452,6 +472,8 @@ export default class GameScene extends Phaser.Scene {
                     this.collidableLayout[j + 1][i + 1] = 1;
                     this.collidableLayout[j + 1][i] = 1;
                     this.collidableLayout[j + 1][i + 2] = 1;
+
+                    this.enterable[j + 2][i + 1] = 1;
                 } else if (this.layout[j][i] == 12 && this.layout[j - 1][i] != 12 && this.layout[j - 1][i] != 12) {
                     this.placeImage(i, j, "house-2");
                     

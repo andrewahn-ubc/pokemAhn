@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import Phaser from "phaser";
 import GameScene from "./GameScene";
+import HomeScene from "./HomeScene";
 
 const Game: React.FC = () => {
   const gameRef = useRef<HTMLDivElement>(null);
@@ -12,7 +13,7 @@ const Game: React.FC = () => {
       height: window.innerHeight,
       parent: gameRef.current || undefined,
       physics: { default: "arcade", arcade: { gravity: { x: 0, y: 0 } } },
-      scene: GameScene,
+      scene: [GameScene, HomeScene],
       audio: {
         disableWebAudio: false  // Ensure WebAudio is enabled
     }
