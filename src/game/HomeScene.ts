@@ -16,7 +16,7 @@ export default class HomeScene extends Phaser.Scene {
         this.background = this.add.image(0, 0, "background");
         this.input.manager.enabled = true;
         this.input.once("pointerdown", () => {
-            this.scene.start("GameScene")
+            this.scene.start("GameScene", { x: 21, y: 13 })
         }, this)
     }
 

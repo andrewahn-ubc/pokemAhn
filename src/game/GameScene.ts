@@ -23,6 +23,8 @@ export default class GameScene extends Phaser.Scene {
     // number of moves made in the horizontal and vertical directions (right and bottom are +ve)
         // the tuple contains the corresponding player's relative coordinates
     private positions: Record<string, [number, number]> = {};
+    private spawnX: number = 21; // Default X
+    private spawnY: number = 15; // Default Y
     private mostRecentPlayerMove!: string;
     private moveEvent: Phaser.Time.TimerEvent | null = null;
     private npcMoveEvents: Record<string, Phaser.Time.TimerEvent> = {};
@@ -63,13 +65,19 @@ export default class GameScene extends Phaser.Scene {
     private collidableLayout: number[][] = new Array(this.dimension).fill(null).map(() => new Array(this.dimension).fill(0));
 
     // initialize our scene
-
     constructor() {
         super("GameScene");
     }
 
-    // load the assets
+    // spawns the character at a specified location on the map (in relative coordinates)
+    init(data: { x: number, y: number }) {
+        if (data.x !== undefined && data.y !== undefined) {
+            this.spawnX = data.x;
+            this.spawnY = data.y;
+        }
+    }
 
+    // load the assets
     preload() {
         // this.load.setBaseURL('https://cdn.phaserfiles.com/v385');
         this.load.image("background", "/assets/bg.png");
@@ -150,7 +158,12 @@ export default class GameScene extends Phaser.Scene {
         this.centerY = window.innerHeight/2;
         this.setUpWorld();
         // character
-        this.player = this.addCharacter(21, 15, "player");
+        // if (!this.player) {
+        //     this.player = this.addCharacter(this.spawnX, this.spawnY, "player");
+        // } else {
+        //     this.player.setPosition(this.spawnX, this.spawnY);
+        // }
+        this.player = this.addCharacter(this.spawnX, this.spawnY, "player");
         this.player_oldman = this.addCharacter(38, 38, "player_oldman");
         this.player.setCollideWorldBounds(true);
         
