@@ -33,6 +33,8 @@ export default class GameScene extends Phaser.Scene {
     private centerY!: integer;
     // music
     private backgroundMusic!: Phaser.Sound.BaseSound;
+    private playlist: string[] = ["intro", "trap", "loser", "from-eden"];
+    private currSong: integer = 0;
     // character movement
     private delay: Record<string, number> = {"player": 200, "player_oldman": 600};
     // layout
@@ -140,6 +142,8 @@ export default class GameScene extends Phaser.Scene {
         // music
         this.load.audio('bgMusic', 'assets/audio/intro.mp3');
         this.load.audio('trap', 'assets/audio/trap.mp3');
+        this.load.audio('loser', 'assets/audio/loser.mp3');
+        this.load.audio('from-eden', 'assets/audio/from-eden.mp3');
 
         // layout
         fetch("/layout.csv") // Adjust the path based on your setup
@@ -157,13 +161,8 @@ export default class GameScene extends Phaser.Scene {
         this.centerX = window.innerWidth/2;
         this.centerY = window.innerHeight/2;
         this.setUpWorld();
-        // character
-        // if (!this.player) {
-        //     this.player = this.addCharacter(this.spawnX, this.spawnY, "player");
-        // } else {
-        //     this.player.setPosition(this.spawnX, this.spawnY);
-        // }
         this.player = this.addCharacter(this.spawnX, this.spawnY, "player");
+        this.player.anims.play("player-still-down"); // TODO: figure out how to make the player face down upon respawning
         this.player_oldman = this.addCharacter(38, 38, "player_oldman");
         this.player.setCollideWorldBounds(true);
         
@@ -199,9 +198,10 @@ export default class GameScene extends Phaser.Scene {
                 }
             });
             this.cursors = this.input.keyboard.createCursorKeys();
-            this.input.keyboard.on('keydown-F', () => {
+            this.input.keyboard.on('keydown-M', () => {
                 this.backgroundMusic.stop();
-                const nextSong = this.backgroundMusic.key == 'trap' ? 'bgMusic' : 'trap';
+                this.currSong = (this.currSong + 1) % this.playlist.length;
+                const nextSong = this.playlist[this.currSong];
                 this.backgroundMusic = this.sound.add(nextSong, {loop:true, volume: 0.5});
                 this.backgroundMusic.play();
             });
@@ -306,6 +306,7 @@ export default class GameScene extends Phaser.Scene {
         // TODO: edit the line below so that can do this.enterable[x][y] instead of [y][x] (more intuitive)
         if (this.enterable[currCoord[1]][currCoord[0]] !== 0) {
             this.input.once("pointerdown", () => {
+                this.backgroundMusic.pause();
                 this.scene.start("HomeScene")
             }, this)
         }
