@@ -1,20 +1,14 @@
 import Phaser from "phaser";
 import Player from "./Player";
+import SceneClass from "./SceneClass";
 
-export default class GameScene extends Phaser.Scene {
+export default class GameScene extends SceneClass {
     private bg!: Phaser.GameObjects.Image;
-    // private player!: Phaser.Physics.Arcade.Sprite; // TODO: replace with custom Player object?
     private player!: Player;
     private player_oldman!: Phaser.Physics.Arcade.Sprite; // TODO: remove?
-    private characters: Record<string, Phaser.Physics.Arcade.Sprite> = {}; // TODO: will need this here & need to fix the type,
-                                                                           // since it should be Character, a parent type of 
-                                                                           // Player and NPC
     // keys
     private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
     private spaceKey!: Phaser.Input.Keyboard.Key;
-    // background dimensions
-    private bgWidth!: integer;
-    private bgHeight!: integer;
     // for displaying the coordinates
     private xCoord!: Phaser.GameObjects.Text;
     private yCoord!: Phaser.GameObjects.Text;
@@ -24,9 +18,8 @@ export default class GameScene extends Phaser.Scene {
     private cellHeight!: integer; 
     // number of moves made in the horizontal and vertical directions (right and bottom are +ve)
         // the tuple contains the corresponding player's relative coordinates
-    private positions: Record<string, [number, number]> = {}; // TODO: keep here, pass in
-    private spawnX: number = 21; // Default X TODO: will need this here
-    private spawnY: number = 15; // Default Y TODO: will need this here
+    private spawnX: number = 21; // Default X 
+    private spawnY: number = 15; // Default Y 
     private npcMoveEvents: Record<string, Phaser.Time.TimerEvent> = {};     // TODO: transfer
     // "center" coordinates (because (0,0) isn't really the "center" of this scene) (in real coordinates)
     private centerX!: integer; // TODO: will need to duplicate this potentially?
@@ -36,7 +29,7 @@ export default class GameScene extends Phaser.Scene {
     private playlist: string[] = ["intro", "trap", "loser", "from-eden"];
     private currSong: integer = 0;
     // character movement
-    private delay: Record<string, number> = {"player_oldman": 600}; // TODO: keep this here, pass in, edit in player class upon init
+    // private delay: Record<string, number> = {"player_oldman": 600}; 
     // layout
     //      Legend
     //      1: tree
@@ -158,6 +151,20 @@ export default class GameScene extends Phaser.Scene {
  
     // set up the scene!
     create() {
+        // initialize variables
+        // takes in relative coordinates and outputs real coordinates
+        this.realCoord = (relativeX: integer, relativeY: integer) => {
+            const realX = this.centerX + (relativeX - this.dimension/2) * this.cellWidth;
+            const realY = this.centerY + (relativeY - this.dimension/2) * this.cellHeight;
+            return [realX, realY];
+        }
+        // takes in real coordinates and outputs relative coordinates
+        this.relativeCoord = (realX: integer, realY: integer) => {
+            const relativeX = Math.floor((realX - this.centerX)/this.cellWidth) + this.dimension/2;
+            const relativeY = Math.floor((realY - this.centerY)/this.cellHeight) + this.dimension/2;
+            return [relativeX, relativeY];
+        }
+
         this.centerX = window.innerWidth/2;
         this.centerY = window.innerHeight/2;
         this.setUpWorld();
@@ -207,7 +214,6 @@ export default class GameScene extends Phaser.Scene {
     }
 
     update() {
-        this.player.setVelocity(0); // TODO: wtf is this
         this.player.update();
         // update coordinates
         const relativeCoords = this.player.getPlayerCoords("player");
@@ -233,11 +239,10 @@ export default class GameScene extends Phaser.Scene {
     addCharacter(positionX: number, positionY: number, name: string) {
         const realCoord = this.realCoord(positionX, positionY);
 
-        const boundRealCoord = this.realCoord.bind(this)
-        const boundRelativeCoord = this.relativeCoord.bind(this)
+        // const boundRealCoord = this.realCoord.bind(this)
+        // const boundRelativeCoord = this.relativeCoord.bind(this)
 
-        const player = new Player(this, realCoord[0], realCoord[1], name, this.positions, this.delay, this.characters, 
-            this.collidableLayout, boundRealCoord, boundRelativeCoord, this.bgWidth, this.bgHeight);
+        const player = new Player(this, realCoord[0], realCoord[1], name);
         // const player = this.physics.add.sprite(realCoord[0], realCoord[1], name); // replace this with our 
         this.positions[name] = [positionX, positionY]; // need to track character's position in the current map
         this.characters[name] = player; // need to keep track of character object
@@ -285,20 +290,6 @@ export default class GameScene extends Phaser.Scene {
                 this.scene.start("HomeScene")
             })
         }
-    }
-
-    // takes in relative coordinates and outputs real coordinates
-    realCoord(relativeX: integer, relativeY: integer) {
-        const realX = this.centerX + (relativeX - this.dimension/2) * this.cellWidth;
-        const realY = this.centerY + (relativeY - this.dimension/2) * this.cellHeight;
-        return [realX, realY];
-    }
-
-    // takes in real coordinates and outputs relative coordinates
-    relativeCoord(realX: integer, realY: integer) {
-        const relativeX = Math.floor((realX - this.centerX)/this.cellWidth) + this.dimension/2;
-        const relativeY = Math.floor((realY - this.centerY)/this.cellHeight) + this.dimension/2;
-        return [relativeX, relativeY];
     }
 
     placeTreesAndFlowerbeds() {

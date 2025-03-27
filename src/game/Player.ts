@@ -1,4 +1,5 @@
 import Phaser from "phaser"
+import SceneClass from "./SceneClass";
 
 export default class Player extends Phaser.Physics.Arcade.Sprite {
     private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
@@ -15,10 +16,11 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     private bgWidth: integer;
     private bgHeight: integer;
 
-    constructor(scene: Phaser.Scene, x: number, y: number, characterName: string, positions: Record<string, [number, number]>, 
-        delay: Record<string, number>, characters: Record<string, Phaser.Physics.Arcade.Sprite>, collidableLayout: number[][],
-        realCoord: (relativeX: integer, relativeY: integer) => number[], relativeCoord: (relativeX: integer, relativeY: integer,) => number[],
-        bgWidth: integer, bgHeight: integer) {
+    // arguments that could be attached to the scene instance: positions, delay, characters, collidableLayout, realCoord,
+    // relativeCoord, bgWidth, and beHeight 
+    // BASICALLY 80% of these arguments would be unnecessary if I just passed in a custom scene interface...
+
+    constructor(scene: SceneClass, x: number, y: number, characterName: string) {
 
         super(scene, x, y, characterName);
 
@@ -34,15 +36,15 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.createAnims(characterName);
 
         // delay
-        delay["characterName"] = this.delay;
+        scene.delay["characterName"] = this.delay;
 
-        this.positions = positions;
-        this.characters = characters;
-        this.collidableLayout = collidableLayout;
-        this.realCoord = realCoord;
-        this.relativeCoord = relativeCoord;
-        this.bgWidth = bgWidth;
-        this.bgHeight = bgHeight;
+        this.positions = scene.positions;
+        this.characters = scene.characters;
+        this.collidableLayout = scene.collidableLayout;
+        this.realCoord = scene.realCoord;
+        this.relativeCoord = scene.relativeCoord;
+        this.bgWidth = scene.bgWidth;
+        this.bgHeight = scene.bgHeight;
 
         // input handling
         if (scene.input.keyboard) {
@@ -59,8 +61,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     update() {
-        console.log(`Player position: x=${this.x}, y=${this.y}`);
-
         // handle initial arrow click (without this section, there's a pause before player moves)
         if (Phaser.Input.Keyboard.JustDown(this.cursors.right)) {
             this.stopMoving("player");

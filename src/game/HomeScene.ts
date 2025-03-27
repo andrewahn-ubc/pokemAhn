@@ -1,8 +1,9 @@
 import Phaser from "phaser";
 import GameScene from "./MainScene";
 import Player from "./Player";
+import SceneClass from "./SceneClass";
 
-export default class HomeScene extends Phaser.Scene {
+export default class HomeScene extends SceneClass {
     private background!: Phaser.GameObjects.Image;
     private player!: Phaser.Physics.Arcade.Sprite;
 
