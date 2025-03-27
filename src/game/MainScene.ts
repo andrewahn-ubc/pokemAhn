@@ -1,15 +1,17 @@
 import Phaser from "phaser";
+import Player from "./Player";
 
 export default class GameScene extends Phaser.Scene {
     private bg!: Phaser.GameObjects.Image;
-    private player!: Phaser.Physics.Arcade.Sprite;
-    private player_oldman!: Phaser.Physics.Arcade.Sprite;
-    private characters: Record<string, Phaser.Physics.Arcade.Sprite> = {};
-    private closeToNPC: boolean = false;
+    // private player!: Phaser.Physics.Arcade.Sprite; // TODO: replace with custom Player object?
+    private player!: Player;
+    private player_oldman!: Phaser.Physics.Arcade.Sprite; // TODO: remove?
+    private characters: Record<string, Phaser.Physics.Arcade.Sprite> = {}; // TODO: will need this here & need to fix the type,
+                                                                           // since it should be Character, a parent type of 
+                                                                           // Player and NPC
     // keys
     private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
     private spaceKey!: Phaser.Input.Keyboard.Key;
-    private arrows: string[] = [];
     // background dimensions
     private bgWidth!: integer;
     private bgHeight!: integer;
@@ -22,21 +24,19 @@ export default class GameScene extends Phaser.Scene {
     private cellHeight!: integer; 
     // number of moves made in the horizontal and vertical directions (right and bottom are +ve)
         // the tuple contains the corresponding player's relative coordinates
-    private positions: Record<string, [number, number]> = {};
-    private spawnX: number = 21; // Default X
-    private spawnY: number = 15; // Default Y
-    private mostRecentPlayerMove!: string;
-    private moveEvent: Phaser.Time.TimerEvent | null = null;
-    private npcMoveEvents: Record<string, Phaser.Time.TimerEvent> = {};
+    private positions: Record<string, [number, number]> = {}; // TODO: keep here, pass in
+    private spawnX: number = 21; // Default X TODO: will need this here
+    private spawnY: number = 15; // Default Y TODO: will need this here
+    private npcMoveEvents: Record<string, Phaser.Time.TimerEvent> = {};     // TODO: transfer
     // "center" coordinates (because (0,0) isn't really the "center" of this scene) (in real coordinates)
-    private centerX!: integer;
-    private centerY!: integer;
+    private centerX!: integer; // TODO: will need to duplicate this potentially?
+    private centerY!: integer; // TODO: ^
     // music
     private backgroundMusic!: Phaser.Sound.BaseSound;
     private playlist: string[] = ["intro", "trap", "loser", "from-eden"];
     private currSong: integer = 0;
     // character movement
-    private delay: Record<string, number> = {"player": 200, "player_oldman": 600};
+    private delay: Record<string, number> = {"player_oldman": 600}; // TODO: keep this here, pass in, edit in player class upon init
     // layout
     //      Legend
     //      1: tree
@@ -58,13 +58,13 @@ export default class GameScene extends Phaser.Scene {
     //      Legend
     //      0: not enterable
     //      1: HomeScene
-    private enterable: number[][] = new Array(this.dimension).fill(null).map(() => new Array(this.dimension).fill(0));
+    private enterable: number[][] = new Array(this.dimension).fill(null).map(() => new Array(this.dimension).fill(0)); // TODO: keep here, pass in
 
     // table that tracks collidable objects
     //      Legend
     //      0: nothing - player can pass through
     //      1: something - player cannot pass through
-    private collidableLayout: number[][] = new Array(this.dimension).fill(null).map(() => new Array(this.dimension).fill(0));
+    public collidableLayout: number[][] = new Array(this.dimension).fill(null).map(() => new Array(this.dimension).fill(0)); // TODO: keep here, pass in
 
     // initialize our scene
     constructor() {
@@ -161,10 +161,6 @@ export default class GameScene extends Phaser.Scene {
         this.centerX = window.innerWidth/2;
         this.centerY = window.innerHeight/2;
         this.setUpWorld();
-        this.player = this.addCharacter(this.spawnX, this.spawnY, "player");
-        this.player.anims.play("player-still-down"); // TODO: figure out how to make the player face down upon respawning
-        this.player_oldman = this.addCharacter(38, 38, "player_oldman");
-        this.player.setCollideWorldBounds(true);
         
         // coordinates
         this.xCoord = this.add.text(20,20,'X: 0', { fontSize: '20px', fill: '#fff', backgroundColor: '#000000',});
@@ -179,7 +175,7 @@ export default class GameScene extends Phaser.Scene {
         // Move camera to a specific position (x, y)
         secondCamera.scrollX = this.centerX - 100; // Move horizontally
         secondCamera.scrollY = this.centerY - 90; // Move vertically
-        secondCamera.setZoom(0.1); // Zoom out
+        secondCamera.setZoom(0.2); // Zoom out
         secondCamera.setBackgroundColor(0x000000); // Black background
 
         // background music 
@@ -211,43 +207,15 @@ export default class GameScene extends Phaser.Scene {
     }
 
     update() {
-        this.player.setVelocity(0);
+        this.player.setVelocity(0); // TODO: wtf is this
+        this.player.update();
         // update coordinates
-        const relativeCoords = this.getPlayerCoords("player");
+        const relativeCoords = this.player.getPlayerCoords("player");
         this.xCoord.setText("X: " + Math.floor(relativeCoords[0]));
         this.yCoord.setText("Y: " + Math.floor(relativeCoords[1]));
-        this.startMovingNPC("player_oldman")
-        this.handleNPCNearPlayer("player_oldman");
 
-        // handle initial arrow click (without this section, there's a pause before player moves)
-        if (Phaser.Input.Keyboard.JustDown(this.cursors.right)) {
-            this.stopMoving("player");
-            this.moveCharacter('right', "player")
-            this.mostRecentPlayerMove = "right"
-            this.arrows.shift()
-            this.arrows.push("right")
-        } else if (Phaser.Input.Keyboard.JustDown(this.cursors.left)) {
-            this.stopMoving("player");
-            this.moveCharacter('left', "player")
-            this.mostRecentPlayerMove = "left"
-            this.arrows.shift()
-            this.arrows.push("left")
-        } else if (Phaser.Input.Keyboard.JustDown(this.cursors.up)) {
-            this.stopMoving("player");
-            this.moveCharacter('up', "player")
-            this.mostRecentPlayerMove = "up"
-            this.arrows.shift()
-            this.arrows.push("up")
-        } else if (Phaser.Input.Keyboard.JustDown(this.cursors.down)) {
-            this.stopMoving("player");
-            this.moveCharacter('down', "player")
-            this.mostRecentPlayerMove = "down"
-            this.arrows.shift()
-            this.arrows.push("down")
-        }
-
-        // handle arrow key "press-and-hold"
-        this.handleMovement();
+        // this.startMovingNPC("player_oldman")
+        // this.handleNPCNearPlayer("player_oldman");
 
         // zoom functionality using + and - symbols
         if (this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.PLUS).isDown) {
@@ -264,18 +232,19 @@ export default class GameScene extends Phaser.Scene {
     // Positions in relative coordinates
     addCharacter(positionX: number, positionY: number, name: string) {
         const realCoord = this.realCoord(positionX, positionY);
-        const player = this.physics.add.sprite(realCoord[0], realCoord[1], name);
-        this.positions[name] = [positionX, positionY];
-        this.characters[name] = player;
 
-        this.createAnims(name);
+        const boundRealCoord = this.realCoord.bind(this)
+        const boundRelativeCoord = this.relativeCoord.bind(this)
+
+        const player = new Player(this, realCoord[0], realCoord[1], name, this.positions, this.delay, this.characters, 
+            this.collidableLayout, boundRealCoord, boundRelativeCoord, this.bgWidth, this.bgHeight);
+        // const player = this.physics.add.sprite(realCoord[0], realCoord[1], name); // replace this with our 
+        this.positions[name] = [positionX, positionY]; // need to track character's position in the current map
+        this.characters[name] = player; // need to keep track of character object
+
+        // this.createAnims(name);
 
         return player;
-    }
-
-    // returns the player's relative coordinates
-    getPlayerCoords(characterName: string): [number, number] {
-        return this.positions[characterName];
     }
 
     setUpWorld() {
@@ -296,13 +265,18 @@ export default class GameScene extends Phaser.Scene {
         this.cellHeight = this.bgHeight / this.dimension;
 
         // trees, paths, bushes
-        this.placeTreesAndFlowerbeds();
         this.placePath();
+        this.placeTreesAndFlowerbeds();
         this.placeLayout();
+
+        this.player = this.addCharacter(this.spawnX, this.spawnY, "player");
+        this.player.anims.play("player-still-down"); // TODO: figure out how to make the player face down upon respawning
+        // this.player_oldman = this.addCharacter(38, 38, "player_oldman");
+        // this.player.setCollideWorldBounds(true);
     }
 
     handleScenes() {
-        const currCoord = this.getPlayerCoords("player");
+        const currCoord = this.player.getPlayerCoords("player");
         // TODO: edit the line below so that can do this.enterable[x][y] instead of [y][x] (more intuitive)
         if (this.enterable[currCoord[1]][currCoord[0]] !== 0) {
             if (!this.input.keyboard) return;
@@ -514,353 +488,89 @@ export default class GameScene extends Phaser.Scene {
         return image;
     }
 
-    // HARD ASSUMPTION: the character must have 16 frames, 4 per direction (in the order: down, left, right, and up)
-    createAnims(character: string) {
-        this.anims.create({
-            key: character + "-left",
-            frames: this.anims.generateFrameNumbers(character, { start: 4, end: 7 }),
-            frameRate: 10,
-            repeat: -1
-        });
-        this.anims.create({
-            key: character + "-right",
-            frames: this.anims.generateFrameNumbers(character, { start: 8, end: 11 }),
-            frameRate: 10,
-            repeat: -1
-        });  
-        this.anims.create({
-            key: character + "-down",
-            frames: this.anims.generateFrameNumbers(character, { start: 0, end: 3 }),
-            frameRate: 10,
-            repeat: -1
-        });
-        this.anims.create({
-            key: character + "-up",
-            frames: this.anims.generateFrameNumbers(character, { start: 12, end: 15 }),
-            frameRate: 10,
-            repeat: -1
-        });
-        this.anims.create({
-            key: character + "-still-down",
-            frames: [{key: character, frame: 0}],
-            frameRate: 10,
-            repeat: -1
-        });
-        this.anims.create({
-            key: character + "-still-up",
-            frames: [{key: character, frame: 12}],
-            frameRate: 10,
-            repeat: -1
-        });
-        this.anims.create({
-            key: character + "-still-left",
-            frames: [{key: character, frame: 4}],
-            frameRate: 10,
-            repeat: -1
-        });
-        this.anims.create({
-            key: character + "-still-right",
-            frames: [{key: character, frame: 8}],
-            frameRate: 10,
-            repeat: -1
-        });
-    }
+    // // encodes random movement of NPCs
+    // startMovingNPC(characterName: string) {
+    //     if (this.npcMoveEvents[characterName]) return;
 
-    // helper for deciding how player should move
-    handleMovement() {
-        if (this.arrows[0] == 'left' && !this.cursors.left.isDown) {
-            this.arrows.shift();
-        }
-        if (this.arrows[0] == 'right' && !this.cursors.right.isDown) {
-            this.arrows.shift();
-        }
-        if (this.arrows[0] == 'up' && !this.cursors.up.isDown) {
-            this.arrows.shift();
-        }
-        if (this.arrows[0] == 'down' && !this.cursors.down.isDown) {
-            this.arrows.shift();
-        }
+    //     this.npcMoveEvents[characterName] = this.time.addEvent({
+    //         delay: this.delay[characterName]*5,
+    //         loop: true,
+    //         callback: () => {
+    //             // randomized movement implemented here
+    //             const actionList = ["left", "right", "up", "down"]
+    //             const listSize = actionList.length
+    //             const randomIndex = Math.floor(Math.random()*listSize)
+    //             const randomAction = actionList[randomIndex]
 
-        if (this.arrows[0] == 'left') {
-            this.startMoving('left')
-        } else if (this.arrows[0] == 'right') {
-            this.startMoving('right')
-        } else if (this.arrows[0] == 'up') {
-            this.startMoving('up')
-        } else if (this.arrows[0] == 'down') {
-            this.startMoving('down')
-        } else {
-            this.stopMoving("player");
-        }
-    }
+    //             this.moveCharacter(randomAction, characterName);
+    //             // character.anims.play(characterName + '-still')
+    //         }
+    //     })
+    // }
 
-    // helper for actually moving the player
-    moveCharacter(direction: string, characterName: string) {
-        const relativeCoords = this.getPlayerCoords(characterName); // TODO: abstract to work for any character
-        const character = this.characters[characterName];
+    // stopMovingNPC(character: string) {
+    //     if (this.npcMoveEvents[character]) {
+    //         this.npcMoveEvents[character].remove();
+    //         this.npcMoveEvents[character] = null; // not sure why this error pops up, since it clearly works
+    //     }
+    // }
 
-        switch (direction) {
-            case "left": {
-                if (character.x - 50 < -this.bgWidth/2 + window.innerWidth) {
-                    console.log("player out of bounds")
-                    return
-                }
+    // handleNPCNearPlayer(characterName: string) {
+    //     const inProximity = this.checkProximity(this.positions[characterName], this.positions["player"]);
 
-                if (this.collidableLayout[relativeCoords[1]][relativeCoords[0] - 1] == 1) {
-                    console.log("cannot move through solid object")
-                    return
-                }
+    //     const opposites: Record<string, string> = {
+    //         "left": "right",
+    //         "right": "left",
+    //         "up": "down",
+    //         "down": "up"
+    //     }
 
-                this.positions[characterName][0] -= 1;
-                const horizontalCoord = this.realCoord(this.positions[characterName][0], 0)[0]; // putting 0 in as the y value bc it doesn't matter
+    //     if (inProximity) {
+    //         this.player.closeToNPC = true;
+    //         this.stopMovingNPC(characterName);
+    //         const relativePosition = this.checkRelativePosition(this.positions[characterName], this.positions["player"]);
+    //         this.characters[characterName].anims.play(characterName + '-still-' + relativePosition);
+    //         this.player.anims.play("player-still-" + opposites[relativePosition]);
+    //     } else {
+    //         this.player.closeToNPC = false;
+    //         this.startMovingNPC(characterName);
+    //     }
+    // }
 
-                this.tweens.add({
-                    targets: character,  
-                    x: horizontalCoord, 
-                    duration: this.delay[characterName],         
-                    ease: 'Linear',        
-                    repeat: 0,             
-                    yoyo: false,
-                    onStart: () => {
-                        character.anims.play(characterName + '-left');
-                    },
-                    // TODO: abstract this part into its own function
-                    onUpdate: (tween: Phaser.Tweens.Tween) => {
-                        const relativeCoords = this.getPlayerCoords(characterName);
-                        if (this.collidableLayout[relativeCoords[1]][relativeCoords[0]] == 1) {
-                            tween.stop();
-                        }
-                    },
-                    onComplete: () => {
-                        if (characterName !== "player") {
-                            character.anims.play(characterName + '-still-left')
-                        }
-                    }
-                });
-                break;}
-            case "right": {
-                if (character.x + 50 >= this.bgWidth/2) {
-                    console.log("player out of bounds");
-                    return
-                }
+    // checkProximity(npcPosition: [number, number], playerPosition: [number, number]) {
+    //     const npcX = npcPosition[0];
+    //     const npcY = npcPosition[1];
+    //     const playerX = playerPosition[0];
+    //     const playerY = playerPosition[1];
 
-                if (this.collidableLayout[relativeCoords[1]][relativeCoords[0] + 1] == 1) {
-                    console.log("cannot move through solid object")
-                    return
-                }
+    //     const xDifference = npcX - playerX
+    //     const yDifference = npcY - playerY
 
-                this.positions[characterName][0] += 1
-                const horizontalCoord = this.realCoord(this.positions[characterName][0], 0)[0]; // putting 0 in as the y value bc it doesn't matter
+    //     if (Math.max(xDifference, -xDifference) <= 1 && Math.max(yDifference, -yDifference) <= 1) {
+    //         return true;
+    //     } else {
+    //         return false;
+    //     }
+    // }
 
-                this.tweens.add({
-                    targets: character,  
-                    x: horizontalCoord,
-                    duration: this.delay[characterName],         
-                    ease: 'Linear',        
-                    repeat: 0,             
-                    yoyo: false,
-                    onStart: () => {
-                        character.anims.play(characterName + '-right');
-                    },
-                    onUpdate: (tween: Phaser.Tweens.Tween) => {
-                        const relativeCoords = this.getPlayerCoords(characterName);
-                        if (this.collidableLayout[relativeCoords[1]][relativeCoords[0]] == 1) {
-                            tween.stop();
-                        }
-                    },
-                    onComplete: () => {
-                        if (characterName !== "player") {
-                            character.anims.play(characterName + '-still-right')
-                        }
-                    }
-                });
-                break;}
-            case "up": {    
-                if (character.y - 50 < -this.bgHeight/2 + window.innerHeight) {
-                    console.log("player out of bounds")
-                    return
-                }
+    // // check the relative position of the player to the NPC (assuming player is within 1 tile of the NPC)
+    // // a value of "left" means the player is on the left side of the NPC
+    // checkRelativePosition(npcPosition: [number, number], playerPosition: [number, number]) {
+    //     const npcX = npcPosition[0];
+    //     const npcY = npcPosition[1];
+    //     const playerX = playerPosition[0];
+    //     const playerY = playerPosition[1];
 
-                if (this.collidableLayout[relativeCoords[1] - 1][relativeCoords[0]] == 1) {
-                    console.log("cannot move through solid object")
-                    return
-                }
-
-                this.positions[characterName][1] -= 1;
-                const verticalCoord = this.realCoord(0, this.positions[characterName][1])[1]; // putting 0 in as the y value bc it doesn't matter
-
-                this.tweens.add({
-                    targets: character,  
-                    y: verticalCoord, 
-                    duration: this.delay[characterName],         
-                    ease: 'Linear',        
-                    repeat: 0,             
-                    yoyo: false,
-                    onStart: () => {
-                        character.anims.play(characterName + '-up');
-                    },
-                    onUpdate: (tween: Phaser.Tweens.Tween) => {
-                        const relativeCoords = this.getPlayerCoords(characterName);
-                        if (this.collidableLayout[relativeCoords[1]][relativeCoords[0]] == 1) {
-                            tween.stop();
-                        }
-                    },
-                    onComplete: () => {
-                        if (characterName !== "player") {
-                            character.anims.play(characterName + '-still-up')
-                        } 
-                    }
-                });
-                break;}
-            case "down": {
-                if (character.y + 50 >= this.bgHeight/2) {
-                    console.log("player out of bounds")
-                    return
-                }
-
-                if (this.collidableLayout[relativeCoords[1] + 1][relativeCoords[0]] == 1) {
-                    console.log("cannot move through solid object")
-                    return
-                }
-
-                this.positions[characterName][1] += 1;
-                const verticalCoord = this.realCoord(0, this.positions[characterName][1])[1]; // putting 0 in as the y value bc it doesn't matter
-                
-                this.tweens.add({
-                    targets: character,  
-                    y: verticalCoord, 
-                    duration: this.delay[characterName],         
-                    ease: 'Linear',        
-                    repeat: 0,             
-                    yoyo: false,
-                    onStart: () => {
-                        character.anims.play(characterName + '-down');
-                    },
-                    onUpdate: (tween: Phaser.Tweens.Tween) => {
-                        const relativeCoords = this.getPlayerCoords(characterName);
-                        // const nextX = character.x
-                        // const nextY = character.y + 300
-                        // const nextRelativePosition = this.relativeCoord(nextX, nextY)
-                        if (this.collidableLayout[relativeCoords[1]][relativeCoords[0]] == 1) {
-                            tween.stop();
-                        }
-                    },
-                    onComplete: () => {
-                        if (characterName !== "player") {
-                            character.anims.play(characterName + '-still-down')
-                        } 
-                    }
-                });
-                break;}
-        }
-    
-    }
-
-    // encodes random movement of NPCs
-    startMovingNPC(characterName: string) {
-        if (this.npcMoveEvents[characterName]) return;
-
-        this.npcMoveEvents[characterName] = this.time.addEvent({
-            delay: this.delay[characterName]*5,
-            loop: true,
-            callback: () => {
-                // randomized movement implemented here
-                const actionList = ["left", "right", "up", "down"]
-                const listSize = actionList.length
-                const randomIndex = Math.floor(Math.random()*listSize)
-                const randomAction = actionList[randomIndex]
-
-                this.moveCharacter(randomAction, characterName);
-                // character.anims.play(characterName + '-still')
-            }
-        })
-    }
-
-    stopMovingNPC(character: string) {
-        if (this.npcMoveEvents[character]) {
-            this.npcMoveEvents[character].remove();
-            this.npcMoveEvents[character] = null; // not sure why this error pops up, since it clearly works
-        }
-    }
-
-    handleNPCNearPlayer(characterName: string) {
-        const inProximity = this.checkProximity(this.positions[characterName], this.positions["player"]);
-
-        const opposites: Record<string, string> = {
-            "left": "right",
-            "right": "left",
-            "up": "down",
-            "down": "up"
-        }
-
-        if (inProximity) {
-            this.closeToNPC = true;
-            this.stopMovingNPC(characterName);
-            const relativePosition = this.checkRelativePosition(this.positions[characterName], this.positions["player"]);
-            this.characters[characterName].anims.play(characterName + '-still-' + relativePosition);
-            this.player.anims.play("player-still-" + opposites[relativePosition]);
-        } else {
-            this.closeToNPC = false;
-            this.startMovingNPC(this.characters[characterName], characterName);
-        }
-    }
-
-    checkProximity(npcPosition: [number, number], playerPosition: [number, number]) {
-        const npcX = npcPosition[0];
-        const npcY = npcPosition[1];
-        const playerX = playerPosition[0];
-        const playerY = playerPosition[1];
-
-        const xDifference = npcX - playerX
-        const yDifference = npcY - playerY
-
-        if (Math.max(xDifference, -xDifference) <= 1 && Math.max(yDifference, -yDifference) <= 1) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    // check the relative position of the player to the NPC (assuming player is within 1 tile of the NPC)
-    // a value of "left" means the player is on the left side of the NPC
-    checkRelativePosition(npcPosition: [number, number], playerPosition: [number, number]) {
-        const npcX = npcPosition[0];
-        const npcY = npcPosition[1];
-        const playerX = playerPosition[0];
-        const playerY = playerPosition[1];
-
-        if (npcX > playerX) {
-            return "left"
-        } else if (npcX < playerX) {
-            return "right"
-        } else if (npcY > playerY) {
-            return "up"
-        } else if (npcY < playerY) {
-            return "down"
-        } else {
-            return "left"
-        }
-    }
-
-    startMoving(direction: string) {
-        if (this.moveEvent) return;
-
-        this.moveEvent = this.time.addEvent({
-            delay: this.delay["player"],
-            loop: true,
-            callback: () => {
-                this.moveCharacter(direction, "player");
-            }
-            
-        })
-    }
-
-    // only for the main player
-    stopMoving(character: string) {
-        if (this.moveEvent) {
-            this.moveEvent.remove(); // Stop the movement loop
-            this.moveEvent = null;
-        }
-        if (this.mostRecentPlayerMove && !this.closeToNPC) this.player.anims.play(character + '-still-' + this.mostRecentPlayerMove);
-    }
+    //     if (npcX > playerX) {
+    //         return "left"
+    //     } else if (npcX < playerX) {
+    //         return "right"
+    //     } else if (npcY > playerY) {
+    //         return "up"
+    //     } else if (npcY < playerY) {
+    //         return "down"
+    //     } else {
+    //         return "left"
+    //     }
+    // }
 }

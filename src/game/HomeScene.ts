@@ -1,5 +1,6 @@
 import Phaser from "phaser";
-import GameScene from "./GameScene";
+import GameScene from "./MainScene";
+import Player from "./Player";
 
 export default class HomeScene extends Phaser.Scene {
     private background!: Phaser.GameObjects.Image;
@@ -18,6 +19,7 @@ export default class HomeScene extends Phaser.Scene {
     create() {
         this.background = this.add.image(0, 0, "background");
         // this.player = this.addCharacter(this.spawnX, this.spawnY, "player");
+        // this.player = new Player(this, 20, 20, "player");
 
         this.input.manager.enabled = true;
 
