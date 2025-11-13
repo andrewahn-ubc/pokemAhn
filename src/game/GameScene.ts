@@ -9,7 +9,7 @@ export default class GameScene extends Phaser.Scene {
     private player_text_created = false;  // track if we've already created it
     private player_text_active = false;
     private keyboardListenerAdded = false;
-    private oldman_convo: string[] = ["Welcome player. What is your name?", "My name is Andrew", "Nice to meet you, Andrew."];
+    private oldman_convo: string[] = ["Welcome, traveler. What brings you to our town?"];
     private characters: Record<string, Phaser.Physics.Arcade.Sprite> = {};
     private closeToNPC: boolean = false;
     // keys
@@ -63,8 +63,24 @@ export default class GameScene extends Phaser.Scene {
     //      1: something - player cannot pass through
     private collidableLayout: number[][] = new Array(this.dimension).fill(null).map(() => new Array(this.dimension).fill(0));
 
-    // initialize our scene
+    async sendDialogueRequest(prompt: string) {
+        const response = await fetch("http://127.0.0.1:8000/", {
+            method: "POST",
+            headers: {
+            "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ prompt }),
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        return data.response;
+    }
 
+    // initialize our scene
     constructor() {
         super("GameScene");
     }
@@ -798,17 +814,21 @@ export default class GameScene extends Phaser.Scene {
                         this.input.keyboard.on('keydown', event => {
                             if (!this.player_text_active) return;
                             if (!this.player_text) return;
-        
-                            if (event.keyCode === 8 && this.player_text.text.length > 0) { 
+                
+                            // Handle backspace
+                            if (event.key === "Backspace" && this.player_text.text.length > 0) { 
                                 this.player_text.text = this.player_text.text.substring(0, this.player_text.text.length - 1);
-                            } else if (event.keyCode === 32 || (event.keyCode >= 48 && event.keyCode <= 90)) { // Space or A-Z/0-9
-                                if (this.player_text.text.length > 80) return;
+                            } 
+                            // Handle normal characters
+                            else if (event.key.length === 1) { // only single-character keys
+                                if (this.player_text.text.length >= 80) return;
                                 this.player_text.text += event.key;
                             }
                         });
                     }
                     this.keyboardListenerAdded = true;
                 }
+                
             }
 
             if (this.oldman_text == undefined) {
@@ -819,11 +839,22 @@ export default class GameScene extends Phaser.Scene {
                     if (this.enterKey.isDown && !this.wasEnterPressed) {
                         this.oldman_convo.push(this.player_text.text)
                         const prompt = this.createPrompt(this.oldman_convo, "Old Man")
+                        const promptLength = prompt.length
                         // send prompt to LLM
-                        const next_npc_response = "output" // replace later
-                        this.oldman_convo.push(next_npc_response)
-                        this.oldman_text.destroy()
-                        this.oldman_text = this.add.text(npcX, npcY, next_npc_response, { fontFamily: 'Arial', color: 'black' })
+                        this.sendDialogueRequest(prompt)
+                        .then((next_npc_response) => {
+                            if (this.oldman_text == undefined) return;
+                            const responseLength = next_npc_response.length
+                            console.log(next_npc_response)
+                            next_npc_response = next_npc_response.slice(promptLength,responseLength)
+                            const indexOfPlayerDialogue = next_npc_response.indexOf("Player:")
+                            if (indexOfPlayerDialogue != -1) {
+                                next_npc_response = next_npc_response.slice(0,indexOfPlayerDialogue)
+                            }
+                            this.oldman_convo.push(next_npc_response)
+                            this.oldman_text.destroy()
+                            this.oldman_text = this.add.text(npcX, npcY, next_npc_response, { fontFamily: 'Arial', color: 'black' })
+                        })
                         this.wasEnterPressed = true;
                     }
                     if (this.enterKey.isUp) {
@@ -838,18 +869,20 @@ export default class GameScene extends Phaser.Scene {
     }
 
     createPrompt(convo: string[], npc_name: string) {
-        let dialogue = "Given this dialogue between an NPC character in my pokemon game and the player, generate the NPC's next line of dialogue. Keep your response under 10 words. Only return the actual sentence the NPC says (don't include 'Old Man:' at the start of your response.\n\n";
+        let dialogue = `Continue this conversation between a Player and an old man NPC in a Pokémon-style game. Speak warmly and briefly.\nReply with a short friendly sentence (about 5–10 words)\nPlayer: Hello\nOld Man: Welcome traveler.\nPlayer: Thank you\n`;
 
         let it_is_npc_turn = true;
 
         for (const msg of convo) {
             if (it_is_npc_turn) {
-                dialogue = dialogue + npc_name + ": " + msg + "\n\n"
+                dialogue = dialogue + npc_name + ": " + msg + "\n"
             } else {
-                dialogue = dialogue + "player: " + msg + "\n\n"
+                dialogue = dialogue + "Player: " + msg + "\n"
             }
             it_is_npc_turn = !it_is_npc_turn
         }
+
+        dialogue = dialogue + npc_name + ": "
 
         return dialogue
     }
