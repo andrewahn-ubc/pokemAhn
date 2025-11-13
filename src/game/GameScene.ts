@@ -33,7 +33,7 @@ export default class GameScene extends Phaser.Scene {
     private positions: Record<string, [number, number]> = {};
     private mostRecentPlayerMove!: string;
     private moveEvent: Phaser.Time.TimerEvent | null = null;
-    private npcMoveEvents: Record<string, Phaser.Time.TimerEvent> = {};
+    private npcMoveEvents: Record<string, Phaser.Time.TimerEvent | null> = {};
     // "center" coordinates (because (0,0) isn't really the "center" of this scene) (in real coordinates)
     private centerX!: integer;
     private centerY!: integer;
@@ -840,8 +840,8 @@ export default class GameScene extends Phaser.Scene {
                         this.oldman_convo.push(this.player_text.text)
                         const prompt = this.createPrompt(this.oldman_convo, "Old Man")
                         const promptLength = prompt.length
-                        // send prompt to LLM
-                        this.sendDialogueRequest(prompt)
+                        const primedPrompt = prompt + this.chooseStarterWord()
+                        this.sendDialogueRequest(primedPrompt)
                         .then((next_npc_response) => {
                             if (this.oldman_text == undefined) return;
                             const responseLength = next_npc_response.length
@@ -868,8 +868,47 @@ export default class GameScene extends Phaser.Scene {
         }
     }
 
+    chooseStarterWord() {
+        const starterWords: Record<string, number> = {
+            "I": 12,
+            "Ah": 10,
+            "Well": 10,
+            "Hmm": 10,
+            "You": 8,
+            "The": 8,
+            "We": 8,
+            "It": 5,
+            "Here": 5,
+            "Oh": 4,
+            "Look": 4,
+            "Let’s": 3,
+            "Remember": 3,
+            "Try": 3,
+            "Be": 3,
+            "Here’s": 2,
+            "Now": 2,
+            "Ohh": 1,
+            "Wow": 1,
+            "Good": 1,
+            "Let": 1
+        };
+        let sumWeights = 0
+        for (const word in starterWords) {
+            sumWeights += starterWords[word]
+        }
+        let random = Math.random() * sumWeights
+
+        for (const word in starterWords) {
+            if (random < starterWords[word]) return word
+            random -= starterWords[word]
+        } 
+
+        return starterWords[starterWords.length - 1]
+    }
+    
+
     createPrompt(convo: string[], npc_name: string) {
-        let dialogue = `Continue this conversation between a Player and an old man NPC in a Pokémon-style game. Speak warmly and briefly.\nReply with a short friendly sentence (about 5–10 words)\nPlayer: Hello\nOld Man: Welcome traveler.\nPlayer: Thank you\n`;
+        let dialogue = `You are an old man NPC in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. You always say something. Do not leave any lines blank.\nPlayer: Hello\nOld Man: Welcome traveler.\nPlayer: Thank you\n`;
 
         let it_is_npc_turn = true;
 
