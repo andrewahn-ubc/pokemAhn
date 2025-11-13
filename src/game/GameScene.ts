@@ -800,8 +800,9 @@ export default class GameScene extends Phaser.Scene {
                             if (!this.player_text) return;
         
                             if (event.keyCode === 8 && this.player_text.text.length > 0) { 
-                                this.player_text.text = this.player_text.text.substr(0, this.player_text.text.length - 1);
+                                this.player_text.text = this.player_text.text.substring(0, this.player_text.text.length - 1);
                             } else if (event.keyCode === 32 || (event.keyCode >= 48 && event.keyCode <= 90)) { // Space or A-Z/0-9
+                                if (this.player_text.text.length > 80) return;
                                 this.player_text.text += event.key;
                             }
                         });
