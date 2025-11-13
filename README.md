@@ -3,10 +3,10 @@
 Inspired by old-school Nintendo Pokemon games ^-^ Built using Phaser 3, React, and TypeScript.
 
 ## How to Play
-Arrow keys: move player/navigate the map
-Space bar: pause/resume music
-f: switch song
-+/-: zoom in/out
+Arrow keys: move player/navigate the map <br>
+Tab: pause/resume music  <br>
+8: switch song  <br>
++/-: zoom in/out  <br>
 
 # If you're curious about how it works
 ### TLDR 
