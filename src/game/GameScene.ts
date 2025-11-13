@@ -6,8 +6,9 @@ export default class GameScene extends Phaser.Scene {
     private player_oldman!: Phaser.Physics.Arcade.Sprite;
     private oldman_text!: Phaser.GameObjects.Text | undefined;
     private player_text!: Phaser.GameObjects.Text | undefined;
-    private textCreated = false;  // track if we've already created it
-    private textEntryActive = false;
+    private player_text_created = false;  // track if we've already created it
+    private player_text_active = false;
+    private keyboardListenerAdded = false;
     private oldman_convo: string[] = ["Welcome player. What is your name?", "My name is Andrew", "Nice to meet you, Andrew."];
     private characters: Record<string, Phaser.Physics.Arcade.Sprite> = {};
     private closeToNPC: boolean = false;
@@ -784,25 +785,28 @@ export default class GameScene extends Phaser.Scene {
             const [playerX, playerY] = this.realCoord(this.positions["player"][0] - 1, this.positions["player"][1] + 1)
 
             // Collect user text.
-            this.textEntryActive = true;
+            this.player_text_active = true;
 
             // Create text only once
-            if (!this.textCreated) {
+            if (!this.player_text_created) {
                 this.player_text = this.add.text(playerX, playerY, '', { fontFamily: 'Arial', color: 'black' });
-                this.textCreated = true;
+                this.player_text_created = true;
 
                 // Optional: add keyboard listener once
-                if (this.input.keyboard && this.player_text !== undefined) {
-                    const playerText = this.player_text;
-                    this.input.keyboard.on('keydown', event => {
-                        if (!this.textEntryActive) return;
-    
-                        if (event.keyCode === 8 && playerText.text.length > 0) { // Backspace
-                            playerText.text = playerText.text.substr(0, playerText.text.length - 1);
-                        } else if (event.keyCode === 32 || (event.keyCode >= 48 && event.keyCode <= 90)) { // Space or A-Z/0-9
-                            playerText.text += event.key;
-                        }
-                    });
+                if (!this.keyboardListenerAdded) {
+                    if (this.input.keyboard && this.player_text !== undefined) {
+                        this.input.keyboard.on('keydown', event => {
+                            if (!this.player_text_active) return;
+                            if (!this.player_text) return;
+        
+                            if (event.keyCode === 8 && this.player_text.text.length > 0) { 
+                                this.player_text.text = this.player_text.text.substr(0, this.player_text.text.length - 1);
+                            } else if (event.keyCode === 32 || (event.keyCode >= 48 && event.keyCode <= 90)) { // Space or A-Z/0-9
+                                this.player_text.text += event.key;
+                            }
+                        });
+                    }
+                    this.keyboardListenerAdded = true;
                 }
             }
 
@@ -862,7 +866,8 @@ export default class GameScene extends Phaser.Scene {
         if (!inProximity && this.player_text !== undefined) {
             this.player_text.destroy();
             this.player_text = undefined;
-            this.textEntryActive = false;
+            this.player_text_active = false;
+            this.player_text_created = false;
         } 
 
         this.oldman_convo = this.oldman_convo.slice(0,1)
