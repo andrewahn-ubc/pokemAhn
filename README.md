@@ -4,8 +4,8 @@ Inspired by old-school Nintendo Pokemon games ^-^ Built using Phaser 3, React, a
 
 ## How to Play
 Arrow keys: move player/navigate the map
-Space bar: pause/resume music
-f: switch song
+Tab: pause/resume music
+8: switch song
 +/-: zoom in/out
 
 # If you're curious about how it works
