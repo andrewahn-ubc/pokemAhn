@@ -862,6 +862,7 @@ export default class GameScene extends Phaser.Scene {
             console.log("out of proximity")
             this.oldman_text.destroy();
             this.oldman_text = undefined;
+            this.oldman_convo = this.oldman_convo.slice(0,1)
         } 
 
         if (!inProximity && this.player_text !== undefined) {
@@ -870,8 +871,6 @@ export default class GameScene extends Phaser.Scene {
             this.player_text_active = false;
             this.player_text_created = false;
         } 
-
-        this.oldman_convo = this.oldman_convo.slice(0,1)
     }
 
     checkProximity(npcPosition: [number, number], playerPosition: [number, number]) {
