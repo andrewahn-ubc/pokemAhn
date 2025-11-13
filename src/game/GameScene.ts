@@ -4,12 +4,19 @@ export default class GameScene extends Phaser.Scene {
     private bg!: Phaser.GameObjects.Image;
     private player!: Phaser.Physics.Arcade.Sprite;
     private player_oldman!: Phaser.Physics.Arcade.Sprite;
+    private oldman_text!: Phaser.GameObjects.Text | undefined;
+    private player_text!: Phaser.GameObjects.Text | undefined;
+    private textCreated = false;  // track if we've already created it
+    private textEntryActive = false;
+    private oldman_convo: string[] = ["Welcome player. What is your name?", "My name is Andrew", "Nice to meet you, Andrew."];
     private characters: Record<string, Phaser.Physics.Arcade.Sprite> = {};
     private closeToNPC: boolean = false;
     // keys
     private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
     private spaceKey!: Phaser.Input.Keyboard.Key;
+    private enterKey!: Phaser.Input.Keyboard.Key;
     private arrows: string[] = [];
+    private wasEnterPressed = false;
     // background dimensions
     private bgWidth!: integer;
     private bgHeight!: integer;
@@ -143,7 +150,8 @@ export default class GameScene extends Phaser.Scene {
         this.centerY = window.innerHeight/2;
         this.setUpWorld();
         // character
-        this.player = this.addCharacter(21, 15, "player");
+        // this.player = this.addCharacter(21, 15, "player");
+        this.player = this.addCharacter(38, 39, "player");
         this.player_oldman = this.addCharacter(38, 38, "player_oldman");
         this.player.setCollideWorldBounds(true);
 
@@ -174,7 +182,7 @@ export default class GameScene extends Phaser.Scene {
         });
         this.backgroundMusic.play();
         if (this.input.keyboard) {
-            this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+            this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.TAB);
             this.spaceKey.on('down', () => {
                 if (this.backgroundMusic.isPlaying) {
                     this.backgroundMusic.pause();
@@ -183,12 +191,20 @@ export default class GameScene extends Phaser.Scene {
                 }
             });
             this.cursors = this.input.keyboard.createCursorKeys();
-            this.input.keyboard.on('keydown-F', () => {
-                this.backgroundMusic.stop();
-                const nextSong = this.backgroundMusic.key == 'trap' ? 'bgMusic' : 'trap';
-                this.backgroundMusic = this.sound.add(nextSong, {loop:true, volume: 0.5});
-                this.backgroundMusic.play();
+            this.input.keyboard.on('keydown', (event: KeyboardEvent) => {
+                if (event.key === '8') {  // using event.key (string)
+                    console.log("Number 8 pressed!");
+                    this.backgroundMusic.stop();
+                    const nextSong = this.backgroundMusic.key === 'trap' ? 'bgMusic' : 'trap';
+                    this.backgroundMusic = this.sound.add(nextSong, { loop: true, volume: 0.5 });
+                    this.backgroundMusic.play();
+                }
             });
+        }
+
+        // for handling conversations
+        if (this.input.keyboard) {
+            this.enterKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
         }
     }
 
@@ -215,6 +231,7 @@ export default class GameScene extends Phaser.Scene {
         this.yCoord.setText("Y: " + Math.floor(relativeCoords[1]));
         this.startMovingNPC("player_oldman")
         this.handleNPCNearPlayer("player_oldman");
+        this.handleNPCFarFromPlayer("player_oldman");
 
         // handle initial arrow click (without this section, there's a pause before player moves)
         if (Phaser.Input.Keyboard.JustDown(this.cursors.right)) {
@@ -762,10 +779,93 @@ export default class GameScene extends Phaser.Scene {
             const relativePosition = this.checkRelativePosition(this.positions[characterName], this.positions["player"]);
             this.characters[characterName].anims.play(characterName + '-still-' + relativePosition);
             this.player.anims.play("player-still-" + opposites[relativePosition]);
+
+            const [npcX, npcY] = this.realCoord(this.positions[characterName][0] - 1, this.positions[characterName][1] - 1)
+            const [playerX, playerY] = this.realCoord(this.positions["player"][0] - 1, this.positions["player"][1] + 1)
+
+            // Collect user text.
+            this.textEntryActive = true;
+
+            // Create text only once
+            if (!this.textCreated) {
+                this.player_text = this.add.text(playerX, playerY, '', { fontFamily: 'Arial', color: 'black' });
+                this.textCreated = true;
+
+                // Optional: add keyboard listener once
+                if (this.input.keyboard && this.player_text !== undefined) {
+                    const playerText = this.player_text;
+                    this.input.keyboard.on('keydown', event => {
+                        if (!this.textEntryActive) return;
+    
+                        if (event.keyCode === 8 && playerText.text.length > 0) { // Backspace
+                            playerText.text = playerText.text.substr(0, playerText.text.length - 1);
+                        } else if (event.keyCode === 32 || (event.keyCode >= 48 && event.keyCode <= 90)) { // Space or A-Z/0-9
+                            playerText.text += event.key;
+                        }
+                    });
+                }
+            }
+
+            if (this.oldman_text == undefined) {
+                this.oldman_text = this.add.text(npcX, npcY, this.oldman_convo[0], { fontFamily: 'Arial', color: 'black' })
+            } else {
+                if (this.player_text) {
+                    // Upon pressing Enter, generate NPC's next response
+                    if (this.enterKey.isDown && !this.wasEnterPressed) {
+                        this.oldman_convo.push(this.player_text.text)
+                        const prompt = this.createPrompt(this.oldman_convo, "Old Man")
+                        // send prompt to LLM
+                        const next_npc_response = "output" // replace later
+                        this.oldman_convo.push(next_npc_response)
+                        this.oldman_text.destroy()
+                        this.oldman_text = this.add.text(npcX, npcY, next_npc_response, { fontFamily: 'Arial', color: 'black' })
+                        this.wasEnterPressed = true;
+                    }
+                    if (this.enterKey.isUp) {
+                        this.wasEnterPressed = false;
+                    }
+                }
+            }
         } else {
             this.closeToNPC = false;
-            this.startMovingNPC(this.characters[characterName], characterName);
+            this.startMovingNPC(characterName);
         }
+    }
+
+    createPrompt(convo: string[], npc_name: string) {
+        let dialogue = "Given this dialogue between an NPC character in my pokemon game and the player, generate the NPC's next line of dialogue. Keep your response under 10 words. Only return the actual sentence the NPC says (don't include 'Old Man:' at the start of your response.\n\n";
+
+        let it_is_npc_turn = true;
+
+        for (const msg of convo) {
+            if (it_is_npc_turn) {
+                dialogue = dialogue + npc_name + ": " + msg + "\n\n"
+            } else {
+                dialogue = dialogue + "player: " + msg + "\n\n"
+            }
+            it_is_npc_turn = !it_is_npc_turn
+        }
+
+        return dialogue
+    }
+
+    // Only works for old man for now
+    handleNPCFarFromPlayer(characterName: string) {
+        const inProximity = this.checkProximity(this.positions[characterName], this.positions["player"]);
+
+        if (!inProximity && this.oldman_text !== undefined) {
+            console.log("out of proximity")
+            this.oldman_text.destroy();
+            this.oldman_text = undefined;
+        } 
+
+        if (!inProximity && this.player_text !== undefined) {
+            this.player_text.destroy();
+            this.player_text = undefined;
+            this.textEntryActive = false;
+        } 
+
+        this.oldman_convo = this.oldman_convo.slice(0,1)
     }
 
     checkProximity(npcPosition: [number, number], playerPosition: [number, number]) {
