@@ -5,7 +5,9 @@ export default class GameScene extends Phaser.Scene {
     private player!: Phaser.Physics.Arcade.Sprite;
     private player_oldman!: Phaser.Physics.Arcade.Sprite;
     private oldman_text!: Phaser.GameObjects.Text | undefined;
+    private oldman_textbox!: Phaser.GameObjects.Image;
     private player_text!: Phaser.GameObjects.Text | undefined;
+    private player_textbox!: Phaser.GameObjects.Image;
     private player_text_created = false;  // track if we've already created it
     private player_text_active = false;
     private keyboardListenerAdded = false;
@@ -65,7 +67,7 @@ export default class GameScene extends Phaser.Scene {
     private collidableLayout: number[][] = new Array(this.dimension).fill(null).map(() => new Array(this.dimension).fill(0));
 
     async sendDialogueRequest(prompt: string) {
-        const response = await fetch("https://pokemahn-api.top", {
+        const response = await fetch("https://pokemahn-api.top/", {
             method: "POST",
             headers: {
             "Content-Type": "application/json",
@@ -92,6 +94,7 @@ export default class GameScene extends Phaser.Scene {
         this.load.image("background", "/assets/bg.png");
         this.load.spritesheet("player", "/assets/players/player.png", { frameWidth: 48, frameHeight: 48 });
         this.load.spritesheet("player_oldman", "/assets/players/player_oldman.png", { frameWidth: 32, frameHeight: 48 });
+        this.load.image("textbox", "/assets/textbox.png");
         this.load.image("github", "/assets/github-mark.png");
         this.load.image("tree", "/assets/tree.png");
         this.load.image("tree-short", "/assets/tree_short.png");
@@ -807,28 +810,28 @@ export default class GameScene extends Phaser.Scene {
 
             switch (relativePosition) {
                 case "left":
-                    npcXOffset = 30
+                    npcXOffset = 70
                     npcYOffset = -20
-                    playerXOffset = -220
-                    playerYOffset = -20
+                    playerXOffset = -300
+                    playerYOffset = -40
                     break;
                 case "right":
-                    npcXOffset = -220
-                    npcYOffset = -20
-                    playerXOffset = 30
+                    npcXOffset = -300
+                    npcYOffset = -40
+                    playerXOffset = 70
                     playerYOffset = -20
                     break;
                 case "up":
                     npcXOffset = -90
-                    npcYOffset = 40
+                    npcYOffset = 60 
                     playerXOffset = -90
-                    playerYOffset = -100
+                    playerYOffset = -120
                     break;
                 case "down":
                     npcXOffset = -90
-                    npcYOffset = -100
+                    npcYOffset = -120
                     playerXOffset = -90
-                    playerYOffset = 40
+                    playerYOffset = 60
                     break;
             }
 
@@ -837,6 +840,7 @@ export default class GameScene extends Phaser.Scene {
 
             // Create text only once
             if (!this.player_text_created) {
+                this.player_textbox = this.add.image(playerX + playerXOffset + 110, playerY + playerYOffset + 35, "textbox");
                 this.player_text = this.add.text(playerX + playerXOffset, playerY + playerYOffset, '', { fontFamily: 'Arial', color: 'black', wordWrap: { width: this.dialogueWidth }, align: "center"});
                 this.player_text_created = true;
 
@@ -863,8 +867,26 @@ export default class GameScene extends Phaser.Scene {
                 
             }
 
+            if (this.player_text) {
+                if (this.player_text.text == "") {
+                    if (this.player_textbox) {
+                        this.player_textbox.destroy()
+                    }
+                } else {
+                    if (!this.player_textbox.active) {
+                        this.player_textbox = this.add.image(playerX + playerXOffset + 110, playerY + playerYOffset + 35, "textbox");
+                        this.player_textbox.setDepth(0)
+                        this.player_text.setDepth(1)
+                    }
+                }
+            }
+
             if (this.oldman_text == undefined) {
-                this.oldman_text = this.add.text(npcX + npcXOffset, npcY + npcYOffset, this.oldman_convo[0], { fontFamily: 'Arial', color: 'black', wordWrap: { width: this.dialogueWidth }, align: "center"})
+                if (this.enterKey.isDown && !this.wasEnterPressed) {
+                    this.wasEnterPressed = true
+                    this.oldman_textbox = this.add.image(npcX + npcXOffset + 110, npcY + npcYOffset + 35, "textbox");
+                    this.oldman_text = this.add.text(npcX + npcXOffset, npcY + npcYOffset, this.oldman_convo[0], { fontFamily: 'Arial', color: 'black', wordWrap: { width: this.dialogueWidth }, align: "center"})
+                }
             } else {
                 if (this.player_text) {
                     // Upon pressing Enter, generate NPC's next response
@@ -970,12 +992,15 @@ export default class GameScene extends Phaser.Scene {
 
         if (!inProximity && this.oldman_text !== undefined) {
             this.oldman_text.destroy();
+            this.oldman_textbox.destroy();
+            this.wasEnterPressed = false;
             this.oldman_text = undefined;
             this.oldman_convo = this.oldman_convo.slice(0,1)
         } 
 
         if (!inProximity && this.player_text !== undefined) {
             this.player_text.destroy();
+            this.player_textbox.destroy();
             this.player_text = undefined;
             this.player_text_active = false;
             this.player_text_created = false;
