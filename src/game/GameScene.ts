@@ -64,7 +64,7 @@ export default class GameScene extends Phaser.Scene {
     private collidableLayout: number[][] = new Array(this.dimension).fill(null).map(() => new Array(this.dimension).fill(0));
 
     async sendDialogueRequest(prompt: string) {
-        const response = await fetch("http://127.0.0.1:8000/", {
+        const response = await fetch("http://3.137.173.26:8000/", {
             method: "POST",
             headers: {
             "Content-Type": "application/json",
@@ -805,7 +805,7 @@ export default class GameScene extends Phaser.Scene {
 
             // Create text only once
             if (!this.player_text_created) {
-                this.player_text = this.add.text(playerX, playerY, '', { fontFamily: 'Arial', color: 'black' });
+                this.player_text = this.add.text(playerX, playerY, '', { fontFamily: 'Arial', color: 'black', wordWrap: { width: 250 }, align: "center"});
                 this.player_text_created = true;
 
                 // Optional: add keyboard listener once
@@ -832,7 +832,7 @@ export default class GameScene extends Phaser.Scene {
             }
 
             if (this.oldman_text == undefined) {
-                this.oldman_text = this.add.text(npcX, npcY, this.oldman_convo[0], { fontFamily: 'Arial', color: 'black' })
+                this.oldman_text = this.add.text(npcX, npcY, this.oldman_convo[0], { fontFamily: 'Arial', color: 'black', wordWrap: { width: 250 }, align: "center"})
             } else {
                 if (this.player_text) {
                     // Upon pressing Enter, generate NPC's next response
@@ -841,19 +841,29 @@ export default class GameScene extends Phaser.Scene {
                         const prompt = this.createPrompt(this.oldman_convo, "Old Man")
                         const promptLength = prompt.length
                         const primedPrompt = prompt + this.chooseStarterWord()
+                        this.player_text.text = ""
+                        this.oldman_text.text = "..."
                         this.sendDialogueRequest(primedPrompt)
                         .then((next_npc_response) => {
                             if (this.oldman_text == undefined) return;
                             const responseLength = next_npc_response.length
                             console.log(next_npc_response)
                             next_npc_response = next_npc_response.slice(promptLength,responseLength)
-                            const indexOfPlayerDialogue = next_npc_response.indexOf("Player:")
+                            const indexOfPlayerDialogue = next_npc_response.indexOf("Player")
                             if (indexOfPlayerDialogue != -1) {
                                 next_npc_response = next_npc_response.slice(0,indexOfPlayerDialogue)
                             }
+                            const indexOfNPCDialogue = next_npc_response.indexOf("Old Man")
+                            if (indexOfNPCDialogue != -1) {
+                                next_npc_response = next_npc_response.slice(0,indexOfNPCDialogue)
+                            }
+                            const indexOfNPCKeyword = next_npc_response.indexOf("NPC")
+                            if (indexOfNPCKeyword != -1) {
+                                next_npc_response = next_npc_response.slice(0,indexOfNPCKeyword)
+                            }
                             this.oldman_convo.push(next_npc_response)
                             this.oldman_text.destroy()
-                            this.oldman_text = this.add.text(npcX, npcY, next_npc_response, { fontFamily: 'Arial', color: 'black' })
+                            this.oldman_text = this.add.text(npcX, npcY, next_npc_response, { fontFamily: 'Arial', color: 'black', wordWrap: { width: 250 }, align: "center"})
                         })
                         this.wasEnterPressed = true;
                     }
@@ -873,10 +883,7 @@ export default class GameScene extends Phaser.Scene {
             "I": 12,
             "Ah": 10,
             "Well": 10,
-            "Hmm": 10,
-            "You": 8,
             "The": 8,
-            "We": 8,
             "It": 5,
             "Here": 5,
             "Oh": 4,
@@ -885,7 +892,6 @@ export default class GameScene extends Phaser.Scene {
             "Remember": 3,
             "Try": 3,
             "Be": 3,
-            "Here’s": 2,
             "Now": 2,
             "Ohh": 1,
             "Wow": 1,
@@ -931,7 +937,6 @@ export default class GameScene extends Phaser.Scene {
         const inProximity = this.checkProximity(this.positions[characterName], this.positions["player"]);
 
         if (!inProximity && this.oldman_text !== undefined) {
-            console.log("out of proximity")
             this.oldman_text.destroy();
             this.oldman_text = undefined;
             this.oldman_convo = this.oldman_convo.slice(0,1)
