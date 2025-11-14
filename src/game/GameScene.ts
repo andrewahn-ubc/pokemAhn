@@ -65,7 +65,7 @@ export default class GameScene extends Phaser.Scene {
     private collidableLayout: number[][] = new Array(this.dimension).fill(null).map(() => new Array(this.dimension).fill(0));
 
     async sendDialogueRequest(prompt: string) {
-        const response = await fetch("http://3.137.173.26:8000/", {
+        const response = await fetch("https://pokemahn-api.top", {
             method: "POST",
             headers: {
             "Content-Type": "application/json",
