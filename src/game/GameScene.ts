@@ -9,6 +9,7 @@ export default class GameScene extends Phaser.Scene {
     private player_text_created = false;  // track if we've already created it
     private player_text_active = false;
     private keyboardListenerAdded = false;
+    private dialogueWidth = 200;
     private oldman_convo: string[] = ["Welcome, traveler. What brings you to our town?"];
     private characters: Record<string, Phaser.Physics.Arcade.Sprite> = {};
     private closeToNPC: boolean = false;
@@ -797,15 +798,46 @@ export default class GameScene extends Phaser.Scene {
             this.characters[characterName].anims.play(characterName + '-still-' + relativePosition);
             this.player.anims.play("player-still-" + opposites[relativePosition]);
 
-            const [npcX, npcY] = this.realCoord(this.positions[characterName][0] - 1, this.positions[characterName][1] - 1)
-            const [playerX, playerY] = this.realCoord(this.positions["player"][0] - 1, this.positions["player"][1] + 1)
+            const [npcX, npcY] = this.realCoord(this.positions[characterName][0], this.positions[characterName][1])
+            const [playerX, playerY] = this.realCoord(this.positions["player"][0], this.positions["player"][1])
+            let npcXOffset = 0
+            let npcYOffset = 0
+            let playerXOffset = 0
+            let playerYOffset = 0
+
+            switch (relativePosition) {
+                case "left":
+                    npcXOffset = 30
+                    npcYOffset = -20
+                    playerXOffset = -220
+                    playerYOffset = -20
+                    break;
+                case "right":
+                    npcXOffset = -220
+                    npcYOffset = -20
+                    playerXOffset = 30
+                    playerYOffset = -20
+                    break;
+                case "up":
+                    npcXOffset = -90
+                    npcYOffset = 40
+                    playerXOffset = -90
+                    playerYOffset = -100
+                    break;
+                case "down":
+                    npcXOffset = -90
+                    npcYOffset = -100
+                    playerXOffset = -90
+                    playerYOffset = 40
+                    break;
+            }
 
             // Collect user text.
             this.player_text_active = true;
 
             // Create text only once
             if (!this.player_text_created) {
-                this.player_text = this.add.text(playerX, playerY, '', { fontFamily: 'Arial', color: 'black', wordWrap: { width: 250 }, align: "center"});
+                this.player_text = this.add.text(playerX + playerXOffset, playerY + playerYOffset, '', { fontFamily: 'Arial', color: 'black', wordWrap: { width: this.dialogueWidth }, align: "center"});
                 this.player_text_created = true;
 
                 // Optional: add keyboard listener once
@@ -832,7 +864,7 @@ export default class GameScene extends Phaser.Scene {
             }
 
             if (this.oldman_text == undefined) {
-                this.oldman_text = this.add.text(npcX, npcY, this.oldman_convo[0], { fontFamily: 'Arial', color: 'black', wordWrap: { width: 250 }, align: "center"})
+                this.oldman_text = this.add.text(npcX + npcXOffset, npcY + npcYOffset, this.oldman_convo[0], { fontFamily: 'Arial', color: 'black', wordWrap: { width: this.dialogueWidth }, align: "center"})
             } else {
                 if (this.player_text) {
                     // Upon pressing Enter, generate NPC's next response
@@ -842,7 +874,7 @@ export default class GameScene extends Phaser.Scene {
                         const promptLength = prompt.length
                         const primedPrompt = prompt + this.chooseStarterWord()
                         this.player_text.text = ""
-                        this.oldman_text.text = "..."
+                        this.oldman_text.text = "                 . . ."
                         this.sendDialogueRequest(primedPrompt)
                         .then((next_npc_response) => {
                             if (this.oldman_text == undefined) return;
@@ -863,7 +895,7 @@ export default class GameScene extends Phaser.Scene {
                             }
                             this.oldman_convo.push(next_npc_response)
                             this.oldman_text.destroy()
-                            this.oldman_text = this.add.text(npcX, npcY, next_npc_response, { fontFamily: 'Arial', color: 'black', wordWrap: { width: 250 }, align: "center"})
+                            this.oldman_text = this.add.text(npcX + npcXOffset, npcY + npcYOffset, next_npc_response, { fontFamily: 'Arial', color: 'black', wordWrap: { width: this.dialogueWidth }, align: "center"})
                         })
                         this.wasEnterPressed = true;
                     }
