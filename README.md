@@ -43,11 +43,13 @@ Legend
 
 
 # TODO
-- confine NPCs to certain areas and make them collidable with the player
-- implement dialogue with NPCs
+- implement dialogue with NPCs (done!)
 - implement signs that display a popup
-- implement other scenes (when the player "enters" a house, for example)
-- some actual gameplay? (pokemon, pokemon battles, lore, etc.)
+- implement ways to add personal website content
+
+# Bugs
+- player shouldn't be able to start conversation? or should they?
+- when player moves relative to npc while in vicinity, the relative position doesn't update so the player's text is in the wrong location
 
 # Progress
 Day 8 (collision detection and simple NPC):
