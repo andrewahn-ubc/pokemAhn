@@ -2,6 +2,11 @@
 
 Inspired by old-school Nintendo Pokemon games ^-^ Built using Phaser 3, React, and TypeScript.
 
+## Setup Instructions
+`git clone https://github.com/andrewahn-ubc/pokemAhn.git` <br>
+`npm run dev` (for development)
+`npm run buuild` (for production)
+
 ## How to Play
 Arrow keys: move player/navigate the map <br>
 Tab: pause/resume music  <br>
