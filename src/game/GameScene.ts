@@ -6,13 +6,14 @@ export default class GameScene extends Phaser.Scene {
     private player_oldman!: Phaser.Physics.Arcade.Sprite;
     private oldman_text!: Phaser.GameObjects.Text | undefined;
     private oldman_textbox!: Phaser.GameObjects.Image;
+    private oldman_convo_started = false;
     private player_text!: Phaser.GameObjects.Text | undefined;
     private player_textbox!: Phaser.GameObjects.Image;
     private player_text_created = false;  // track if we've already created it
     private player_text_active = false;
     private keyboardListenerAdded = false;
     private dialogueWidth = 200;
-    private oldman_convo: string[] = ["Welcome, traveler. What brings you to our town?"];
+    private oldman_convo: string[] = [];
     private characters: Record<string, Phaser.Physics.Arcade.Sprite> = {};
     private closeToNPC: boolean = false;
     // keys
@@ -877,17 +878,26 @@ export default class GameScene extends Phaser.Scene {
                         this.player_textbox = this.add.image(playerX + playerXOffset + 110, playerY + playerYOffset + 35, "textbox");
                         this.player_textbox.setDepth(0)
                         this.player_text.setDepth(1)
+                        this.oldman_convo_started = true
                     }
                 }
             }
 
-            if (this.oldman_text == undefined) {
+            if (this.oldman_text == undefined && !this.oldman_convo_started) {
                 if (this.enterKey.isDown && !this.wasEnterPressed) {
                     this.wasEnterPressed = true
                     this.oldman_textbox = this.add.image(npcX + npcXOffset + 110, npcY + npcYOffset + 35, "textbox");
-                    this.oldman_text = this.add.text(npcX + npcXOffset, npcY + npcYOffset, this.oldman_convo[0], { fontFamily: 'Arial', color: 'black', wordWrap: { width: this.dialogueWidth }, align: "center"})
+                    const oldman_convo_starter = "Welcome, traveler. What brings you to our town?"
+                    this.oldman_convo.push(oldman_convo_starter)
+                    this.oldman_text = this.add.text(npcX + npcXOffset, npcY + npcYOffset, oldman_convo_starter, { fontFamily: 'Arial', color: 'black', wordWrap: { width: this.dialogueWidth }, align: "center"})
                 }
             } else {
+                if (this.oldman_text == undefined && this.oldman_convo_started) {
+                    if (this.enterKey.isDown && !this.wasEnterPressed) {
+                        this.oldman_textbox = this.add.image(npcX + npcXOffset + 110, npcY + npcYOffset + 35, "textbox");
+                        this.oldman_text = this.add.text(npcX + npcXOffset, npcY + npcYOffset, "                 . . .", { fontFamily: 'Arial', color: 'black', wordWrap: { width: this.dialogueWidth }, align: "center"})
+                    }
+                }
                 if (this.player_text) {
                     // Upon pressing Enter, generate NPC's next response
                     if (this.enterKey.isDown && !this.wasEnterPressed) {
@@ -896,6 +906,7 @@ export default class GameScene extends Phaser.Scene {
                         const promptLength = prompt.length
                         const primedPrompt = prompt + this.chooseStarterWord()
                         this.player_text.text = ""
+                        if (!this.oldman_text) return
                         this.oldman_text.text = "                 . . ."
                         this.sendDialogueRequest(primedPrompt)
                         .then((next_npc_response) => {
@@ -934,23 +945,13 @@ export default class GameScene extends Phaser.Scene {
 
     chooseStarterWord() {
         const starterWords: Record<string, number> = {
-            "I": 12,
             "Ah": 10,
             "Well": 10,
             "The": 8,
             "It": 5,
-            "Here": 5,
             "Oh": 4,
-            "Look": 4,
-            "Let’s": 3,
-            "Remember": 3,
-            "Try": 3,
             "Be": 3,
-            "Now": 2,
-            "Ohh": 1,
             "Wow": 1,
-            "Good": 1,
-            "Let": 1
         };
         let sumWeights = 0
         for (const word in starterWords) {
@@ -996,6 +997,7 @@ export default class GameScene extends Phaser.Scene {
             this.wasEnterPressed = false;
             this.oldman_text = undefined;
             this.oldman_convo = this.oldman_convo.slice(0,1)
+            this.oldman_convo_started = false
         } 
 
         if (!inProximity && this.player_text !== undefined) {
