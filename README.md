@@ -4,6 +4,8 @@ Inspired by old-school Nintendo Pokemon games ^-^ Built using Phaser 3, React, a
 
 ## Setup Instructions
 `git clone https://github.com/andrewahn-ubc/pokemAhn.git` <br>
+`cd pokemAhn` <br>
+`npm install` <br>
 `npm run dev` (for development) <br>
 `npm run buuild` (for production)
 
