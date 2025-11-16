@@ -68,20 +68,32 @@ export default class GameScene extends Phaser.Scene {
     private collidableLayout: number[][] = new Array(this.dimension).fill(null).map(() => new Array(this.dimension).fill(0));
 
     async sendDialogueRequest(prompt: string) {
-        const response = await fetch("https://pokemahn-api.top/", {
-            method: "POST",
-            headers: {
-            "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ prompt }),
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error: ${response.status}`);
+        try {
+            const response = await fetch("https://pokemahn-api.top/", {
+                method: "POST",
+                headers: {
+                "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ prompt }),
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            return data.response;
+        } catch (error: unknown) {
+            let sliceIndex = 0;
+            for (let i = prompt.length - 1; i >= 0; i--) {
+                if (prompt[i] == " ") {
+                    sliceIndex = i
+                    console.log(prompt[i])
+                    break;
+                }
+            }
+            return prompt.slice(0, sliceIndex + 1) + "Oops. I'll have to get back to you later. Andrew's fetch request failed."
         }
-        
-        const data = await response.json();
-        return data.response;
     }
 
     // initialize our scene
