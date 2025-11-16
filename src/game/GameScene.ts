@@ -262,7 +262,7 @@ export default class GameScene extends Phaser.Scene {
         // background music 
         this.backgroundMusic = this.sound.add('bgMusic', {
             loop: true,  // Loop the music
-            volume: 0.0  // Set volume (0.0 to 1.0)
+            volume: 0.5  // Set volume (0.0 to 1.0)
         });
         this.backgroundMusic.play();
         if (this.input.keyboard) {
@@ -1129,13 +1129,18 @@ export default class GameScene extends Phaser.Scene {
                 far_from_every_npc = false
             }
 
-            if (!inProximity && this.npc_text[characterName] !== undefined) {
-                this.npc_text[characterName].destroy();
-                this.npc_textbox.destroy();
+            if (!inProximity && this.npc_currently_talking === characterName) {
+                if (this.npc_text[characterName]) {
+                    this.npc_text[characterName].destroy();
+                }
+                if (this.npc_textbox) {
+                    this.npc_textbox.destroy();
+                }
                 this.wasEnterPressed = false;
                 this.npc_text[characterName] = undefined;
                 this.npc_convos[characterName] = this.npc_convos[characterName].slice(0,0)
                 this.npc_convo_started = false
+                this.npc_convo_started
                 this.npc_started_convo = true
                 if (this.npc_currently_talking === characterName) {
                     this.npc_currently_talking = ""
@@ -1150,6 +1155,7 @@ export default class GameScene extends Phaser.Scene {
             this.player_text_active = false;
             this.player_text_created = false;
             this.subtitles.text = "";
+            this.npc_currently_talking = "";
         }
     }
 
