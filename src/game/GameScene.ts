@@ -7,6 +7,7 @@ export default class GameScene extends Phaser.Scene {
     private npc_text: Record<string, Phaser.GameObjects.Text | undefined> = {};
     private npc_textbox!: Phaser.GameObjects.Image;
     private npc_convo_started = false;
+    private npc_currently_talking = "";
     private npc_started_convo = true;
     private npc_convos: Record<string, string[]> = {};
     private npc_convo_starter: Record<string, string> = {};
@@ -116,6 +117,7 @@ export default class GameScene extends Phaser.Scene {
         this.load.spritesheet("player", "/assets/players/player.png", { frameWidth: 48, frameHeight: 48 });
         this.load.spritesheet("Old Man", "/assets/players/player_oldman.png", { frameWidth: 32, frameHeight: 48 });
         this.load.spritesheet("Nurse Joy", "/assets/players/player_nursejoy.png", { frameWidth: 32, frameHeight: 48 });
+        this.load.spritesheet("Professor Oak", "/assets/players/player_profoak.png", { frameWidth: 32, frameHeight: 48 });
         // mischelaneous
         this.load.image("textbox", "/assets/textbox.png");
         this.load.image("github", "/assets/github-mark.png");
@@ -202,8 +204,9 @@ export default class GameScene extends Phaser.Scene {
         this.setUpWorld();
         // character
         this.player = this.addCharacter("player", 200, "", "", 38, 39);
-        this.addCharacter("Old Man", 500, "Welcome, traveler. What brings you to our town?", "You are an old man NPC in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hello\nOld Man: Welcome traveler.\nPlayer: Thank you\n");
-        this.addCharacter("Nurse Joy", 350, "Hi! Are your pokemon doing alright?", "You are a young female nurse NPC in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hi!\nNurse Joy: Welcome to our town!!.\nPlayer: Thank you!\n");
+        this.addCharacter("Old Man", 500, "Welcome, traveler. What brings you to our town?", "You are an old man NPC in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hello\nOld Man: Welcome traveler.\nPlayer: Thank you\n", 38,38);
+        this.addCharacter("Nurse Joy", 350, "Hi! Are your pokemon doing alright?", "You are a young female nurse NPC in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hi!\nNurse Joy: Welcome to our town!!\nPlayer: Thank you!\n",38,39);
+        this.addCharacter("Professor Oak", 350, "Hey there, kid. Which pokemon would you like to choose?", "You are a middle-aged, male, Pokémon professor NPC in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hi\nProfessor Oak: Welcome, kid.\nPlayer: Thank you\n");
         this.player.setCollideWorldBounds(true);
         
         // coordinates
@@ -329,6 +332,7 @@ export default class GameScene extends Phaser.Scene {
         this.yCoord.setText("Y: " + Math.floor(relativeCoords[1]));
         this.handleNPC("Old Man")
         this.handleNPC("Nurse Joy")
+        this.handleNPC("Professor Oak")
         this.handleNPCsFarFromPlayer()
 
         // handle initial arrow click (without this section, there's a pause before player moves)
@@ -866,6 +870,8 @@ export default class GameScene extends Phaser.Scene {
     }
 
     handleNPCNearPlayer(characterName: string) {
+        if (this.npc_currently_talking !== characterName && this.npc_convo_started) return
+        
         const inProximity = this.checkProximity(this.positions[characterName], this.positions["player"]);
 
         const opposites: Record<string, string> = {
@@ -878,6 +884,7 @@ export default class GameScene extends Phaser.Scene {
         if (inProximity) {
             this.closeToNPC = true;
             this.stopMovingNPC(characterName);
+            this.npc_currently_talking = characterName;
             const relativePosition = this.checkRelativePosition(this.positions[characterName], this.positions["player"]);
             this.characters[characterName].anims.play(characterName + '-still-' + relativePosition);
             this.player.anims.play("player-still-" + opposites[relativePosition]);
@@ -1100,16 +1107,10 @@ export default class GameScene extends Phaser.Scene {
                 this.npc_convos[characterName] = this.npc_convos[characterName].slice(0,0)
                 this.npc_convo_started = false
                 this.npc_started_convo = true
+                if (this.npc_currently_talking === characterName) {
+                    this.npc_currently_talking = ""
+                }
             } 
-
-            // if (!inProximity && this.player_text !== undefined) {
-            //     this.player_text.destroy();
-            //     this.player_textbox.destroy();
-            //     this.player_text = undefined;
-            //     this.player_text_active = false;
-            //     this.player_text_created = false;
-            //     this.subtitles.text = ""
-            // } 
         }
 
         if (far_from_every_npc && this.player_text !== undefined) {
