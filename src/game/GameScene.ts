@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 
 export default class GameScene extends Phaser.Scene {
+    private loadingText!: Phaser.GameObjects.Text;
     private bg!: Phaser.GameObjects.Image;
     private player!: Phaser.Physics.Arcade.Sprite;
     // NPCs
@@ -112,6 +113,14 @@ export default class GameScene extends Phaser.Scene {
     // load the assets
 
     preload() {
+        // show loading scene
+        this.cameras.main.setBackgroundColor("#000000");
+        const {width, height} = this.scale
+        this.loadingText = this.add.text(width/2, height/2, "loading PokemAhn...", {
+            "fontSize": "24px",
+            color: "white"
+        })
+        this.loadingText.setOrigin(0.5, 0.5);
         // background
         this.load.image("background", "/assets/bg.png");
         // characters
@@ -214,6 +223,7 @@ export default class GameScene extends Phaser.Scene {
  
     // set up the scene!
     create() {
+        this.loadingText.text = "" 
         this.centerX = window.innerWidth/2;
         this.centerY = window.innerHeight/2;
         this.setUpWorld();
