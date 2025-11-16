@@ -44,6 +44,8 @@ export default class GameScene extends Phaser.Scene {
     private centerY!: integer;
     // music
     private backgroundMusic!: Phaser.Sound.BaseSound;
+    private playlist: string[] = ["bgMusic", "wouldthati", "why", "mistake", "1036", "wurli", "baby", "spacecadet", "thnkfast"];
+    private nextSongIndex = 0;
     // character movement
     private delay: Record<string, number> = {"player": 200, "player_oldman": 600};
     // layout
@@ -61,7 +63,6 @@ export default class GameScene extends Phaser.Scene {
     //      11: house #1
     //      12: house #2
     private layout!: number[][];
-
     // table that tracks collidable objects
     //      Legend
     //      0: nothing - player can pass through
@@ -166,7 +167,14 @@ export default class GameScene extends Phaser.Scene {
         this.load.image("house-2", "/assets/house_2.png");
         // music
         this.load.audio('bgMusic', 'assets/audio/intro.mp3');
-        this.load.audio('trap', 'assets/audio/trap.mp3');
+        this.load.audio('baby', 'assets/audio/baby-stillwoozy.mp3');
+        this.load.audio('mistake', 'assets/audio/mistake-kenititus.mp3');
+        this.load.audio('1036', 'assets/audio/1036-beabadoobee.mp3');
+        this.load.audio('spacecadet', 'assets/audio/spacecadet-beabadoobee.mp3');
+        this.load.audio('thnkfast', 'assets/audio/thinkfast-dominicfike.mp3');
+        this.load.audio('why', 'assets/audio/why-dominicfike.mp3');
+        this.load.audio('wouldthati', 'assets/audio/wouldthati-hozier.mp3');
+        this.load.audio('wurli', 'assets/audio/wurli-dominicfike.mp3');
 
         // layout
         fetch("/layout.csv") // Adjust the path based on your setup
@@ -227,11 +235,11 @@ export default class GameScene extends Phaser.Scene {
             });
             this.cursors = this.input.keyboard.createCursorKeys();
             this.input.keyboard.on('keydown', (event: KeyboardEvent) => {
-                if (event.key === '8') {  // using event.key (string)
+                if (event.key === '8') {  
                     console.log("Number 8 pressed!");
                     this.backgroundMusic.stop();
-                    const nextSong = this.backgroundMusic.key === 'trap' ? 'bgMusic' : 'trap';
-                    this.backgroundMusic = this.sound.add(nextSong, { loop: true, volume: 0.5 });
+                    this.nextSongIndex = (this.nextSongIndex + 1) % this.playlist.length
+                    this.backgroundMusic = this.sound.add(this.playlist[this.nextSongIndex], { loop: true, volume: 0.5 });
                     this.backgroundMusic.play();
                 }
             });
