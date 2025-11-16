@@ -201,9 +201,9 @@ export default class GameScene extends Phaser.Scene {
         this.centerY = window.innerHeight/2;
         this.setUpWorld();
         // character
-        this.player = this.addCharacter(38, 39, "player", 200, "", "");
-        this.addCharacter(38, 34, "Old Man", 100000, "Welcome, traveler. What brings you to our town?", "You are an old man NPC in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hello\nOld Man: Welcome traveler.\nPlayer: Thank you\n");
-        this.addCharacter(38, 38, "Nurse Joy", 100000, "Hi! Are your pokemon doing alright?", "You are an young female nurse NPC in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hello\nNurse Joy: Welcome traveler.\nPlayer: Thank you\n");
+        this.player = this.addCharacter("player", 200, "", "", 38, 39);
+        this.addCharacter("Old Man", 500, "Welcome, traveler. What brings you to our town?", "You are an old man NPC in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hello\nOld Man: Welcome traveler.\nPlayer: Thank you\n");
+        this.addCharacter("Nurse Joy", 350, "Hi! Are your pokemon doing alright?", "You are a young female nurse NPC in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hi!\nNurse Joy: Welcome to our town!!.\nPlayer: Thank you!\n");
         this.player.setCollideWorldBounds(true);
         
         // coordinates
@@ -270,18 +270,50 @@ export default class GameScene extends Phaser.Scene {
     }
 
     // Positions in relative coordinates
-    addCharacter(positionX: number, positionY: number, name: string, delay: number, convo_starter: string, prompt: string) {
-        const realCoord = this.realCoord(positionX, positionY);
-        const player = this.physics.add.sprite(realCoord[0], realCoord[1], name);
-        this.positions[name] = [positionX, positionY];
-        this.characters[name] = player;
-        this.createAnims(name);
-        this.delay[name] = delay;
-        this.npc_convos[name] = [];
-        this.npc_convo_starter[name] = convo_starter;
-        this.npc_prompts[name] = prompt;
+    addCharacter(name: string, delay: number, convo_starter: string, prompt: string, positionX?: number, positionY?: number) {
+        if (positionX == undefined || positionY == undefined) {
+            const [positionX, positionY] = this.generateValidSpawnPoint()
+            const realCoord = this.realCoord(positionX, positionY);
+            this.positions[name] = [positionX, positionY];
+            const player = this.physics.add.sprite(realCoord[0], realCoord[1], name);
+            this.characters[name] = player;
+            this.createAnims(name);
+            this.delay[name] = delay;
+            this.npc_convos[name] = [];
+            this.npc_convo_starter[name] = convo_starter;
+            this.npc_prompts[name] = prompt;
+            return player;
+        } else {
+            const realCoord = this.realCoord(positionX, positionY);
+            this.positions[name] = [positionX, positionY];
+            const player = this.physics.add.sprite(realCoord[0], realCoord[1], name);
+            this.characters[name] = player;
+            this.createAnims(name);
+            this.delay[name] = delay;
+            this.npc_convos[name] = [];
+            this.npc_convo_starter[name] = convo_starter;
+            this.npc_prompts[name] = prompt;
+            return player;
+        }
+    }
 
-        return player;
+    generateValidSpawnPoint() {
+        let foundValidSpawnPoint = false
+        let randomX = 0
+        let randomY = 0
+        
+        while (!foundValidSpawnPoint) {
+            randomX = Math.round(Math.random()*this.dimension/2) + this.dimension/4;
+            randomY = Math.round(Math.random()*this.dimension/2) + this.dimension/4;
+
+            if (randomX < 2 || randomX > 78 || randomY < 2 || randomY > 78) continue
+
+            if (this.collidableLayout[randomY][randomX] == 0) {
+                foundValidSpawnPoint = true
+            }
+        }
+
+        return [randomX, randomY]
     }
 
     // returns the player's relative coordinates
