@@ -4,17 +4,19 @@ export default class GameScene extends Phaser.Scene {
     private bg!: Phaser.GameObjects.Image;
     private player!: Phaser.Physics.Arcade.Sprite;
     private player_oldman!: Phaser.Physics.Arcade.Sprite;
-    private oldman_text!: Phaser.GameObjects.Text | undefined;
-    private oldman_textbox!: Phaser.GameObjects.Image;
-    private oldman_convo_started = false;
-    private oldman_started_convo = true;
+    private npc_text: Record<string, Phaser.GameObjects.Text | undefined> = {};
+    private npc_textbox!: Phaser.GameObjects.Image;
+    private npc_convo_started = false;
+    private npc_started_convo = true;
+    private npc_convos: Record<string, string[]> = {
+        "player_oldman": []
+    };
     private player_text!: Phaser.GameObjects.Text | undefined;
     private player_textbox!: Phaser.GameObjects.Image;
     private player_text_created = false;  // track if we've already created it
     private player_text_active = false;
     private keyboardListenerAdded = false;
     private dialogueWidth = 200;
-    private oldman_convo: string[] = [];
     private characters: Record<string, Phaser.Physics.Arcade.Sprite> = {};
     private closeToNPC: boolean = false;
     // keys
@@ -912,44 +914,44 @@ export default class GameScene extends Phaser.Scene {
                         this.player_text.setDepth(1)
                         this.player_text.x = playerX + playerXOffset
                         this.player_text.y = playerY + playerYOffset
-                        this.oldman_convo_started = true
+                        this.npc_convo_started = true
                     }
                 }
             }
 
-            if (this.oldman_text == undefined && !this.oldman_convo_started) {
+            if (this.npc_text["player_oldman"] == undefined && !this.npc_convo_started) {
                 if (this.enterKey.isDown && !this.wasEnterPressed) {
                     this.wasEnterPressed = true
-                    this.oldman_textbox = this.add.image(npcX + npcXOffset + 110, npcY + npcYOffset + 35, "textbox");
+                    this.npc_textbox = this.add.image(npcX + npcXOffset + 110, npcY + npcYOffset + 35, "textbox");
                     const oldman_convo_starter = "Welcome, traveler. What brings you to our town?"
-                    this.oldman_convo.push(oldman_convo_starter)
-                    this.oldman_text = this.add.text(npcX + npcXOffset, npcY + npcYOffset, oldman_convo_starter, { fontFamily: 'Arial', color: 'black', wordWrap: { width: this.dialogueWidth }, align: "center"})
+                    this.npc_convos["player_oldman"].push(oldman_convo_starter)
+                    this.npc_text["player_oldman"] = this.add.text(npcX + npcXOffset, npcY + npcYOffset, oldman_convo_starter, { fontFamily: 'Arial', color: 'black', wordWrap: { width: this.dialogueWidth }, align: "center"})
                     if (this.subtitles.text === "(press Enter or type to start conversation)") {
                         this.subtitles.text = "(type your message)"
                     }
                 }
             } else {
-                if (this.oldman_text == undefined && this.oldman_convo_started) {
+                if (this.npc_text["player_oldman"] == undefined && this.npc_convo_started) {
                     if (this.enterKey.isDown && !this.wasEnterPressed) {
-                        this.oldman_textbox = this.add.image(npcX + npcXOffset + 110, npcY + npcYOffset + 35, "textbox");
-                        this.oldman_text = this.add.text(npcX + npcXOffset, npcY + npcYOffset, "                 . . .", { fontFamily: 'Arial', color: 'black', wordWrap: { width: this.dialogueWidth }, align: "center"})
+                        this.npc_textbox = this.add.image(npcX + npcXOffset + 110, npcY + npcYOffset + 35, "textbox");
+                        this.npc_text["player_oldman"] = this.add.text(npcX + npcXOffset, npcY + npcYOffset, "                 . . .", { fontFamily: 'Arial', color: 'black', wordWrap: { width: this.dialogueWidth }, align: "center"})
                     }
-                    this.oldman_started_convo = false;
+                    this.npc_started_convo = false;
                 }
                 if (this.player_text) {
                     // Upon pressing Enter, generate NPC's next response
                     if (this.enterKey.isDown && !this.wasEnterPressed) {
                         this.subtitles.text = ""
-                        this.oldman_convo.push(this.player_text.text)
-                        const prompt = this.createPrompt(this.oldman_convo, "Old Man")
+                        this.npc_convos["player_oldman"].push(this.player_text.text)
+                        const prompt = this.createPrompt(this.npc_convos["player_oldman"], "Old Man")
                         const promptLength = prompt.length
                         const primedPrompt = prompt + this.chooseStarterWord()
                         this.player_text.text = ""
-                        if (!this.oldman_text) return
-                        this.oldman_text.text = "                 . . ."
+                        if (!this.npc_text["player_oldman"]) return
+                        this.npc_text["player_oldman"].text = "                 . . ."
                         this.sendDialogueRequest(primedPrompt)
                         .then((next_npc_response) => {
-                            if (this.oldman_text == undefined) return;
+                            if (this.npc_text["player_oldman"] == undefined) return;
                             const responseLength = next_npc_response.length
                             console.log(next_npc_response)
                             next_npc_response = next_npc_response.slice(promptLength,responseLength)
@@ -961,9 +963,9 @@ export default class GameScene extends Phaser.Scene {
                             if (indexOfNPCDialogue != -1) {
                                 next_npc_response = next_npc_response.slice(0,indexOfNPCDialogue)
                             }
-                            this.oldman_convo.push(next_npc_response)
-                            this.oldman_text.destroy()
-                            this.oldman_text = this.add.text(npcX + npcXOffset, npcY + npcYOffset, next_npc_response, { fontFamily: 'Arial', color: 'black', wordWrap: { width: this.dialogueWidth }, align: "center"})
+                            this.npc_convos["player_oldman"].push(next_npc_response)
+                            this.npc_text["player_oldman"].destroy()
+                            this.npc_text["player_oldman"] = this.add.text(npcX + npcXOffset, npcY + npcYOffset, next_npc_response, { fontFamily: 'Arial', color: 'black', wordWrap: { width: this.dialogueWidth }, align: "center"})
                             this.subtitles.text = "(type your message)"
                         })
                         this.wasEnterPressed = true;
@@ -1008,7 +1010,7 @@ export default class GameScene extends Phaser.Scene {
         let dialogue = `You are an old man NPC in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. You always say something. Do not leave any lines blank.\nPlayer: Hello\nOld Man: Welcome traveler.\nPlayer: Thank you\n`;
 
         let it_is_npc_turn = false;
-        if (this.oldman_started_convo) {
+        if (this.npc_started_convo) {
             it_is_npc_turn = true;
         }
 
@@ -1034,13 +1036,13 @@ export default class GameScene extends Phaser.Scene {
     handleNPCFarFromPlayer(characterName: string) {
         const inProximity = this.checkProximity(this.positions[characterName], this.positions["player"]);
 
-        if (!inProximity && this.oldman_text !== undefined) {
-            this.oldman_text.destroy();
-            this.oldman_textbox.destroy();
+        if (!inProximity && this.npc_text["player_oldman"] !== undefined) {
+            this.npc_text["player_oldman"].destroy();
+            this.npc_textbox.destroy();
             this.wasEnterPressed = false;
-            this.oldman_text = undefined;
-            this.oldman_convo = this.oldman_convo.slice(0,1)
-            this.oldman_convo_started = false
+            this.npc_text["player_oldman"] = undefined;
+            this.npc_convos["player_oldman"] = this.npc_convos["player_oldman"].slice(0,1)
+            this.npc_convo_started = false
         } 
 
         if (!inProximity && this.player_text !== undefined) {
