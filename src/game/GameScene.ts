@@ -657,6 +657,11 @@ export default class GameScene extends Phaser.Scene {
                     onComplete: () => {
                         if (characterName !== "player") {
                             character.anims.play(characterName + '-still-left')
+                        } else {
+                            // For the player, set still animation when movement completes
+                            if (this.mostRecentPlayerMove && !this.closeToNPC) {
+                                character.anims.play(characterName + '-still-left');
+                            }
                         }
                     }
                 });
@@ -694,8 +699,13 @@ export default class GameScene extends Phaser.Scene {
                     onComplete: () => {
                         if (characterName !== "player") {
                             character.anims.play(characterName + '-still-right')
+                        } else {
+                            // For the player, set still animation when movement completes
+                            if (this.mostRecentPlayerMove && !this.closeToNPC) {
+                                character.anims.play(characterName + '-still-right');
+                            }
                         }
-                    }
+                    } 
                 });
                 break;}
             case "up": {    
@@ -731,7 +741,12 @@ export default class GameScene extends Phaser.Scene {
                     onComplete: () => {
                         if (characterName !== "player") {
                             character.anims.play(characterName + '-still-up')
-                        } 
+                        } else {
+                            // For the player, set still animation when movement completes
+                            if (this.mostRecentPlayerMove && !this.closeToNPC) {
+                                character.anims.play(characterName + '-still-up');
+                            }
+                        }
                     }
                 });
                 break;}
@@ -771,7 +786,12 @@ export default class GameScene extends Phaser.Scene {
                     onComplete: () => {
                         if (characterName !== "player") {
                             character.anims.play(characterName + '-still-down')
-                        } 
+                        } else {
+                            // For the player, set still animation when movement completes
+                            if (this.mostRecentPlayerMove && !this.closeToNPC) {
+                                character.anims.play(characterName + '-still-down');
+                            }
+                        }
                     }
                 });
                 break;}
@@ -1092,6 +1112,11 @@ export default class GameScene extends Phaser.Scene {
             this.moveEvent.remove(); // Stop the movement loop
             this.moveEvent = null;
         }
-        if (this.mostRecentPlayerMove && !this.closeToNPC) this.player.anims.play(character + '-still-' + this.mostRecentPlayerMove);
+        if (this.mostRecentPlayerMove && !this.closeToNPC) {
+            const activeTweens = this.tweens.getTweensOf(this.player);
+            if (activeTweens.length === 0) {
+                this.player.anims.play(character + '-still-' + this.mostRecentPlayerMove);
+            }
+        }
     }
 }
