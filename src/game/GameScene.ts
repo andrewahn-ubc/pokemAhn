@@ -1049,8 +1049,9 @@ export default class GameScene extends Phaser.Scene {
             this.npc_textbox.destroy();
             this.wasEnterPressed = false;
             this.npc_text[characterName] = undefined;
-            this.npc_convos[characterName] = this.npc_convos[characterName].slice(0,1)
+            this.npc_convos[characterName] = this.npc_convos[characterName].slice(0,0)
             this.npc_convo_started = false
+            this.npc_started_convo = true
         } 
 
         if (!inProximity && this.player_text !== undefined) {
