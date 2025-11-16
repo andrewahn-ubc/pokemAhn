@@ -812,7 +812,7 @@ export default class GameScene extends Phaser.Scene {
             switch (relativePosition) {
                 case "left":
                     npcXOffset = 70
-                    npcYOffset = -20
+                    npcYOffset = -40
                     playerXOffset = -300
                     playerYOffset = -40
                     break;
@@ -820,7 +820,7 @@ export default class GameScene extends Phaser.Scene {
                     npcXOffset = -300
                     npcYOffset = -40
                     playerXOffset = 70
-                    playerYOffset = -20
+                    playerYOffset = -40
                     break;
                 case "up":
                     npcXOffset = -90
