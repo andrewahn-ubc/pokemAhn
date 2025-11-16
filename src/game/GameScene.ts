@@ -44,6 +44,8 @@ export default class GameScene extends Phaser.Scene {
     private mostRecentPlayerMove!: string;
     private moveEvent: Phaser.Time.TimerEvent | null = null;
     private npcMoveEvents: Record<string, Phaser.Time.TimerEvent | null> = {};
+    private delay: Record<string, number> = {};
+    private npcTickSpeed: integer = 4;
     // "center" coordinates (because (0,0) isn't really the "center" of this scene) (in real coordinates)
     private centerX!: integer;
     private centerY!: integer;
@@ -51,8 +53,7 @@ export default class GameScene extends Phaser.Scene {
     private backgroundMusic!: Phaser.Sound.BaseSound;
     private playlist: string[] = ["bgMusic", "wouldthati", "why", "mistake", "1036", "wurli", "baby", "spacecadet", "thnkfast"];
     private nextSongIndex = 0;
-    // character movement
-    private delay: Record<string, number> = {};
+    
     // layout
     //      Legend
     //      1: tree
@@ -115,9 +116,23 @@ export default class GameScene extends Phaser.Scene {
         this.load.image("background", "/assets/bg.png");
         // characters
         this.load.spritesheet("player", "/assets/players/player.png", { frameWidth: 48, frameHeight: 48 });
+        this.load.spritesheet("Piplup", "/assets/players/pokemon_piplup.png", { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet("Turtwig", "/assets/players/pokemon_turtwig.png", { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet("Chimchar", "/assets/players/pokemon_chimchar.png", { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet("Staravia", "/assets/players/pokemon_staravia.png", { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet("Pikachu", "/assets/players/pokemon_pikachu.png", { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet("Mamoswine", "/assets/players/pokemon_mamoswine.png", { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet("Arceus", "/assets/players/pokemon_arceus.png", { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet("Old Man", "/assets/players/player_oldman.png", { frameWidth: 32, frameHeight: 48 });
         this.load.spritesheet("Nurse Joy", "/assets/players/player_nursejoy.png", { frameWidth: 32, frameHeight: 48 });
         this.load.spritesheet("Professor Oak", "/assets/players/player_profoak.png", { frameWidth: 32, frameHeight: 48 });
+        this.load.spritesheet("Dawn", "/assets/players/player_dawn.png", { frameWidth: 48, frameHeight: 48 });
+        this.load.spritesheet("Boy 1", "/assets/players/player_boy1.png", { frameWidth: 48, frameHeight: 48 });
+        this.load.spritesheet("Girl 1", "/assets/players/player_girl1.png", { frameWidth: 32, frameHeight: 48 });
+        this.load.spritesheet("Grandma", "/assets/players/player_grandma.png", { frameWidth: 32, frameHeight: 48 });
+        this.load.spritesheet("Baby", "/assets/players/player_baby.png", { frameWidth: 48, frameHeight: 48 });
+        this.load.spritesheet("Cynthia", "/assets/players/player_cynthia.png", { frameWidth: 48, frameHeight: 48 });
+        this.load.spritesheet("Bicycle Kid", "/assets/players/player_bicycle.png", { frameWidth: 48, frameHeight: 48 });
         // mischelaneous
         this.load.image("textbox", "/assets/textbox.png");
         this.load.image("github", "/assets/github-mark.png");
@@ -203,10 +218,24 @@ export default class GameScene extends Phaser.Scene {
         this.centerY = window.innerHeight/2;
         this.setUpWorld();
         // character
+        this.addCharacter("Old Man", 500, "Welcome, traveler. What brings you to our town?", "You are an old man NPC in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hello\nOld Man: Welcome traveler.\nPlayer: Thank you\n");
+        this.addCharacter("Nurse Joy", 350, "Hi! Are your pokemon doing alright?", "You are a young female nurse NPC in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hi!\nNurse Joy: Welcome to our town!!\nPlayer: Thank you!\n");
+        this.addCharacter("Professor Oak", 400, "Hey there, kid. Which pokemon would you like to choose?", "You are a middle-aged, male, Pokémon professor NPC in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hi\nProfessor Oak: Welcome, kid.\nPlayer: Thank you\n");
+        this.addCharacter("Piplup", 200, "I love bubbles.", "You are a water-type Penguine-based baby Pokemon NPC named Piplup in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hi\nPiplup: I love water.\nPlayer: Nice to meet you!\n");
+        this.addCharacter("Chimchar", 220, "OOH OOH AH AH FIRE.", "You are a fire-type Monkey-based baby Pokemon NPC named Chimchar in a Pokémon-style game. Speak cheerily and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hi\nChimchar: I love fire.\nPlayer: Nice to meet you!\n");
+        this.addCharacter("Turtwig", 305, "Do you like the twig on my head?", "You are a turtle-based grass-type baby Pokemon NPC named Turtwig in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hi\nTurtwig: I love leaves.\nPlayer: You are so cute!\n");
+        this.addCharacter("Staravia", 50, "Chirp", "You are a flying-type bird-based Pokemon NPC named Staravia in a Pokémon-style game. Speak cheerily and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hi\nStaravia: I love flying.\nPlayer: Nice to meet you!\n");
+        this.addCharacter("Pikachu", 200, "Pika pika!", "You are a lightning-type rat-based Pokemon NPC named Pikachu in a Pokémon-style game. Speak cheerily and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hi\nPikachu: I'm gonna try my best today.\nPlayer: You're awesome!\n");
+        // this.addCharacter("Mamoswine", 600, "I'm a mammoth lol.", "You are a Ice/Ground-type Mammoth-based adult Pokemon NPC named Mamoswine in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hi\nMamoswine: I'm so big.\nPlayer: You are so big!\n");
+        // this.addCharacter("Arceus", 700, "The time has come! Prepare for justice.", "You are a Pokemon God NPC named Arceus in a Pokémon-style game, and you created the entire universe. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hi\nArceus: I'm a God.\nPlayer: You are amazing.\n");
+        this.addCharacter("Dawn", 300, "Hey! Let's go train together.", "You are a teenage girl Pokemon trainer in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hi\nDawn: Hi!!.\nPlayer: Let's be friends.\n");
+        this.addCharacter("Boy 1", 280, "2018 LeBron is the most complete basketball player of all time.", "You are a young boy NPC in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hi\nBoy 1: What's up?\nPlayer: Not much.\n");
+        this.addCharacter("Girl 1", 350, "The sky is so pretty today.", "You are a young girl NPC in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hi little girl.\nGirl 1: I miss my mommy.\nPlayer: I'm sorry little girl.\n");
+        this.addCharacter("Grandma", 420, "I'm going home. My cats need me.", "You are an old woman NPC in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hi grandma, what are you doing?\nGrandma: I'm on my way home.\nPlayer: I see, have a good day.\n");
+        this.addCharacter("Baby", 100, "Goo goo gah gah lol.", "You are a baby NPC in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hi baby, what's your name?\nBaby: Goo goo gah gah lol.\nPlayer: I see, have a good day.\n");
+        this.addCharacter("Cynthia", 310, "The history here is truly fascinating.", "You are a expert female Pokemon trainer in a Pokémon-style game. Speak confidently and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hi, could we have a pokemon battle?\nCynthia: I would never waste my time on you.\nPlayer: I see, have a good day.\n");
+        this.addCharacter("Bicycle Kid", 200, "You could never beat me in a Pokemon battle. I'm goated.", "You are a boy riding a bicycle in a Pokémon-style game, and you train pokemon too. Speak confidently and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hi, could we have a pokemon battle?\nBicycle Kid: You don't stand a chance against me.\nPlayer: We'll have to find out.\n");
         this.player = this.addCharacter("player", 200, "", "", 38, 39);
-        this.addCharacter("Old Man", 500, "Welcome, traveler. What brings you to our town?", "You are an old man NPC in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hello\nOld Man: Welcome traveler.\nPlayer: Thank you\n", 38,38);
-        this.addCharacter("Nurse Joy", 350, "Hi! Are your pokemon doing alright?", "You are a young female nurse NPC in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hi!\nNurse Joy: Welcome to our town!!\nPlayer: Thank you!\n",38,39);
-        this.addCharacter("Professor Oak", 350, "Hey there, kid. Which pokemon would you like to choose?", "You are a middle-aged, male, Pokémon professor NPC in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hi\nProfessor Oak: Welcome, kid.\nPlayer: Thank you\n");
         this.player.setCollideWorldBounds(true);
         
         // coordinates
@@ -216,7 +245,7 @@ export default class GameScene extends Phaser.Scene {
         this.yCoord.setScrollFactor(0);
 
         // subtitle instructions for the user
-        this.subtitles = this.add.text(this.centerX, this.centerY + 300, "", { fontSize: '20px', color: 'black', backgroundColor: "white"})
+        this.subtitles = this.add.text(this.centerX, this.centerY + 300, "", { fontSize: '18px', color: 'black', backgroundColor: "white"})
         this.subtitles.setScrollFactor(0)
         this.subtitles.setOrigin(0.5, 0.5)
 
@@ -254,9 +283,6 @@ export default class GameScene extends Phaser.Scene {
                     this.backgroundMusic = this.sound.add(this.playlist[this.nextSongIndex], { loop: true, volume: 0.5 });
                     this.backgroundMusic.play();
                 }
-                if (event.key === 'Enter') {  
-                    this.handleEnterPress();
-                }
             });
         }
 
@@ -266,38 +292,28 @@ export default class GameScene extends Phaser.Scene {
         }
     }
 
-    handleEnterPress() {
-        if (this.player_text) {
-            // this.player_text.text = ""
-        }
-    }
-
     // Positions in relative coordinates
     addCharacter(name: string, delay: number, convo_starter: string, prompt: string, positionX?: number, positionY?: number) {
+        let realCoord = [0,0]
+
         if (positionX == undefined || positionY == undefined) {
             const [positionX, positionY] = this.generateValidSpawnPoint()
-            const realCoord = this.realCoord(positionX, positionY);
+            realCoord = this.realCoord(positionX, positionY);
             this.positions[name] = [positionX, positionY];
-            const player = this.physics.add.sprite(realCoord[0], realCoord[1], name);
-            this.characters[name] = player;
-            this.createAnims(name);
-            this.delay[name] = delay;
-            this.npc_convos[name] = [];
-            this.npc_convo_starter[name] = convo_starter;
-            this.npc_prompts[name] = prompt;
-            return player;
         } else {
-            const realCoord = this.realCoord(positionX, positionY);
+            realCoord = this.realCoord(positionX, positionY);
             this.positions[name] = [positionX, positionY];
-            const player = this.physics.add.sprite(realCoord[0], realCoord[1], name);
-            this.characters[name] = player;
-            this.createAnims(name);
-            this.delay[name] = delay;
-            this.npc_convos[name] = [];
-            this.npc_convo_starter[name] = convo_starter;
-            this.npc_prompts[name] = prompt;
-            return player;
         }
+
+        const player = this.physics.add.sprite(realCoord[0], realCoord[1], name);
+        this.characters[name] = player;
+        this.createAnims(name);
+        this.delay[name] = this.npcTickSpeed*delay;
+        if (name === "player") this.delay[name] = delay;
+        this.npc_convos[name] = [];
+        this.npc_convo_starter[name] = convo_starter;
+        this.npc_prompts[name] = prompt;
+        return player;
     }
 
     generateValidSpawnPoint() {
@@ -306,8 +322,10 @@ export default class GameScene extends Phaser.Scene {
         let randomY = 0
         
         while (!foundValidSpawnPoint) {
-            randomX = Math.round(Math.random()*this.dimension/2) + this.dimension/4;
-            randomY = Math.round(Math.random()*this.dimension/2) + this.dimension/4;
+            // randomX = Math.round(Math.random()*this.dimension/2) + this.dimension/4;
+            // randomY = Math.round(Math.random()*this.dimension/2) + this.dimension/4;
+            randomX = Math.round(Math.random()*this.dimension);
+            randomY = Math.round(Math.random()*this.dimension);
 
             if (randomX < 2 || randomX > 78 || randomY < 2 || randomY > 78) continue
 
@@ -333,6 +351,20 @@ export default class GameScene extends Phaser.Scene {
         this.handleNPC("Old Man")
         this.handleNPC("Nurse Joy")
         this.handleNPC("Professor Oak")
+        this.handleNPC("Piplup")
+        this.handleNPC("Chimchar")
+        this.handleNPC("Turtwig")
+        this.handleNPC("Staravia")
+        this.handleNPC("Pikachu")
+        // this.handleNPC("Mamoswine")
+        // this.handleNPC("Arceus")
+        this.handleNPC("Dawn")
+        this.handleNPC("Boy 1")
+        this.handleNPC("Girl 1")
+        this.handleNPC("Grandma")
+        this.handleNPC("Baby")
+        this.handleNPC("Cynthia")
+        this.handleNPC("Bicycle Kid")
         this.handleNPCsFarFromPlayer()
 
         // handle initial arrow click (without this section, there's a pause before player moves)
@@ -592,8 +624,6 @@ export default class GameScene extends Phaser.Scene {
 
     placeImage(relativeX: integer, relativeY: integer, assetName: string) {
         const realCoords = this.realCoord(relativeX, relativeY);
-
-        // TODO: set the origin of the image so that its top left corner is flush with the grid system
         const image = this.add.image(realCoords[0], realCoords[1], assetName);
         const xShift = (image.width > this.cellWidth) ? (this.cellWidth/2)/image.width : 0.5;
         const yShift = (image.height > this.cellHeight) ? (this.cellHeight/2)/image.height : 0.5;
