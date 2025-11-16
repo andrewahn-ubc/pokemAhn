@@ -7,6 +7,7 @@ export default class GameScene extends Phaser.Scene {
     private oldman_text!: Phaser.GameObjects.Text | undefined;
     private oldman_textbox!: Phaser.GameObjects.Image;
     private oldman_convo_started = false;
+    private oldman_started_convo = true;
     private player_text!: Phaser.GameObjects.Text | undefined;
     private player_textbox!: Phaser.GameObjects.Image;
     private player_text_created = false;  // track if we've already created it
@@ -911,6 +912,7 @@ export default class GameScene extends Phaser.Scene {
                         this.oldman_textbox = this.add.image(npcX + npcXOffset + 110, npcY + npcYOffset + 35, "textbox");
                         this.oldman_text = this.add.text(npcX + npcXOffset, npcY + npcYOffset, "                 . . .", { fontFamily: 'Arial', color: 'black', wordWrap: { width: this.dialogueWidth }, align: "center"})
                     }
+                    this.oldman_started_convo = false;
                 }
                 if (this.player_text) {
                     // Upon pressing Enter, generate NPC's next response
@@ -935,10 +937,6 @@ export default class GameScene extends Phaser.Scene {
                             const indexOfNPCDialogue = next_npc_response.indexOf("Old Man")
                             if (indexOfNPCDialogue != -1) {
                                 next_npc_response = next_npc_response.slice(0,indexOfNPCDialogue)
-                            }
-                            const indexOfNPCKeyword = next_npc_response.indexOf("NPC")
-                            if (indexOfNPCKeyword != -1) {
-                                next_npc_response = next_npc_response.slice(0,indexOfNPCKeyword)
                             }
                             this.oldman_convo.push(next_npc_response)
                             this.oldman_text.destroy()
@@ -985,7 +983,10 @@ export default class GameScene extends Phaser.Scene {
     createPrompt(convo: string[], npc_name: string) {
         let dialogue = `You are an old man NPC in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. You always say something. Do not leave any lines blank.\nPlayer: Hello\nOld Man: Welcome traveler.\nPlayer: Thank you\n`;
 
-        let it_is_npc_turn = true;
+        let it_is_npc_turn = false;
+        if (this.oldman_started_convo) {
+            it_is_npc_turn = true;
+        }
 
         for (const msg of convo) {
             if (it_is_npc_turn) {
@@ -995,8 +996,12 @@ export default class GameScene extends Phaser.Scene {
             }
             it_is_npc_turn = !it_is_npc_turn
         }
-
-        dialogue = dialogue + npc_name + ": "
+        
+        if (it_is_npc_turn) {
+            dialogue = dialogue + npc_name + ": "
+        } else {
+            dialogue = dialogue + "Player" + ": "
+        }
 
         return dialogue
     }
