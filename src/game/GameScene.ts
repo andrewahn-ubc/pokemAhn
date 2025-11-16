@@ -11,6 +11,12 @@ export default class GameScene extends Phaser.Scene {
     private npc_convos: Record<string, string[]> = {
         "player_oldman": []
     };
+    private npc_convo_starter: Record<string, string> = {
+        "player_oldman": "Welcome, traveler. What brings you to our town?"
+    };
+    private npc_prompts: Record<string, string> = {
+        "player_oldman": "You are an old man NPC in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. You always say something. Do not leave any lines blank.\nPlayer: Hello\nOld Man: Welcome traveler.\nPlayer: Thank you\n"
+    };
     private player_text!: Phaser.GameObjects.Text | undefined;
     private player_textbox!: Phaser.GameObjects.Image;
     private player_text_created = false;  // track if we've already created it
@@ -197,7 +203,6 @@ export default class GameScene extends Phaser.Scene {
         this.centerY = window.innerHeight/2;
         this.setUpWorld();
         // character
-        // this.player = this.addCharacter(21, 15, "player");
         this.player = this.addCharacter(38, 39, "player");
         this.player_oldman = this.addCharacter(38, 38, "player_oldman");
         this.player.setCollideWorldBounds(true);
@@ -281,9 +286,7 @@ export default class GameScene extends Phaser.Scene {
         const relativeCoords = this.getPlayerCoords("player");
         this.xCoord.setText("X: " + Math.floor(relativeCoords[0]));
         this.yCoord.setText("Y: " + Math.floor(relativeCoords[1]));
-        this.startMovingNPC("player_oldman")
-        this.handleNPCNearPlayer("player_oldman");
-        this.handleNPCFarFromPlayer("player_oldman");
+        this.handleNPC("player_oldman")
 
         // handle initial arrow click (without this section, there's a pause before player moves)
         if (Phaser.Input.Keyboard.JustDown(this.cursors.right)) {
@@ -322,6 +325,12 @@ export default class GameScene extends Phaser.Scene {
         if (this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.MINUS).isDown) {
             this.cameras.main.setZoom(Phaser.Math.Clamp(this.cameras.main.zoom - 0.03, 0.1, 2));
         }
+    }
+
+    handleNPC(npm_name: string) {
+        this.startMovingNPC(npm_name);
+        this.handleNPCNearPlayer(npm_name);
+        this.handleNPCFarFromPlayer(npm_name);
     }
 
     setUpWorld() {
@@ -919,22 +928,21 @@ export default class GameScene extends Phaser.Scene {
                 }
             }
 
-            if (this.npc_text["player_oldman"] == undefined && !this.npc_convo_started) {
+            if (this.npc_text[characterName] == undefined && !this.npc_convo_started) {
                 if (this.enterKey.isDown && !this.wasEnterPressed) {
                     this.wasEnterPressed = true
                     this.npc_textbox = this.add.image(npcX + npcXOffset + 110, npcY + npcYOffset + 35, "textbox");
-                    const oldman_convo_starter = "Welcome, traveler. What brings you to our town?"
-                    this.npc_convos["player_oldman"].push(oldman_convo_starter)
-                    this.npc_text["player_oldman"] = this.add.text(npcX + npcXOffset, npcY + npcYOffset, oldman_convo_starter, { fontFamily: 'Arial', color: 'black', wordWrap: { width: this.dialogueWidth }, align: "center"})
+                    this.npc_convos[characterName].push(this.npc_convo_starter[characterName])
+                    this.npc_text[characterName] = this.add.text(npcX + npcXOffset, npcY + npcYOffset, this.npc_convo_starter[characterName], { fontFamily: 'Arial', color: 'black', wordWrap: { width: this.dialogueWidth }, align: "center"})
                     if (this.subtitles.text === "(press Enter or type to start conversation)") {
                         this.subtitles.text = "(type your message)"
                     }
                 }
             } else {
-                if (this.npc_text["player_oldman"] == undefined && this.npc_convo_started) {
+                if (this.npc_text[characterName] == undefined && this.npc_convo_started) {
                     if (this.enterKey.isDown && !this.wasEnterPressed) {
                         this.npc_textbox = this.add.image(npcX + npcXOffset + 110, npcY + npcYOffset + 35, "textbox");
-                        this.npc_text["player_oldman"] = this.add.text(npcX + npcXOffset, npcY + npcYOffset, "                 . . .", { fontFamily: 'Arial', color: 'black', wordWrap: { width: this.dialogueWidth }, align: "center"})
+                        this.npc_text[characterName] = this.add.text(npcX + npcXOffset, npcY + npcYOffset, "                 . . .", { fontFamily: 'Arial', color: 'black', wordWrap: { width: this.dialogueWidth }, align: "center"})
                     }
                     this.npc_started_convo = false;
                 }
@@ -942,16 +950,16 @@ export default class GameScene extends Phaser.Scene {
                     // Upon pressing Enter, generate NPC's next response
                     if (this.enterKey.isDown && !this.wasEnterPressed) {
                         this.subtitles.text = ""
-                        this.npc_convos["player_oldman"].push(this.player_text.text)
-                        const prompt = this.createPrompt(this.npc_convos["player_oldman"], "Old Man")
+                        this.npc_convos[characterName].push(this.player_text.text)
+                        const prompt = this.createPrompt(this.npc_convos[characterName], characterName)
                         const promptLength = prompt.length
                         const primedPrompt = prompt + this.chooseStarterWord()
                         this.player_text.text = ""
-                        if (!this.npc_text["player_oldman"]) return
-                        this.npc_text["player_oldman"].text = "                 . . ."
+                        if (!this.npc_text[characterName]) return
+                        this.npc_text[characterName].text = "                 . . ."
                         this.sendDialogueRequest(primedPrompt)
                         .then((next_npc_response) => {
-                            if (this.npc_text["player_oldman"] == undefined) return;
+                            if (this.npc_text[characterName] == undefined) return;
                             const responseLength = next_npc_response.length
                             console.log(next_npc_response)
                             next_npc_response = next_npc_response.slice(promptLength,responseLength)
@@ -959,13 +967,13 @@ export default class GameScene extends Phaser.Scene {
                             if (indexOfPlayerDialogue != -1) {
                                 next_npc_response = next_npc_response.slice(0,indexOfPlayerDialogue)
                             }
-                            const indexOfNPCDialogue = next_npc_response.indexOf("Old Man")
+                            const indexOfNPCDialogue = next_npc_response.indexOf(characterName)
                             if (indexOfNPCDialogue != -1) {
                                 next_npc_response = next_npc_response.slice(0,indexOfNPCDialogue)
                             }
-                            this.npc_convos["player_oldman"].push(next_npc_response)
-                            this.npc_text["player_oldman"].destroy()
-                            this.npc_text["player_oldman"] = this.add.text(npcX + npcXOffset, npcY + npcYOffset, next_npc_response, { fontFamily: 'Arial', color: 'black', wordWrap: { width: this.dialogueWidth }, align: "center"})
+                            this.npc_convos[characterName].push(next_npc_response)
+                            this.npc_text[characterName].destroy()
+                            this.npc_text[characterName] = this.add.text(npcX + npcXOffset, npcY + npcYOffset, next_npc_response, { fontFamily: 'Arial', color: 'black', wordWrap: { width: this.dialogueWidth }, align: "center"})
                             this.subtitles.text = "(type your message)"
                         })
                         this.wasEnterPressed = true;
@@ -1007,7 +1015,7 @@ export default class GameScene extends Phaser.Scene {
     
 
     createPrompt(convo: string[], npc_name: string) {
-        let dialogue = `You are an old man NPC in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. You always say something. Do not leave any lines blank.\nPlayer: Hello\nOld Man: Welcome traveler.\nPlayer: Thank you\n`;
+        let prompt = this.npc_prompts[npc_name]
 
         let it_is_npc_turn = false;
         if (this.npc_started_convo) {
@@ -1016,32 +1024,32 @@ export default class GameScene extends Phaser.Scene {
 
         for (const msg of convo) {
             if (it_is_npc_turn) {
-                dialogue = dialogue + npc_name + ": " + msg + "\n"
+                prompt = prompt + npc_name + ": " + msg + "\n"
             } else {
-                dialogue = dialogue + "Player: " + msg + "\n"
+                prompt = prompt + "Player: " + msg + "\n"
             }
             it_is_npc_turn = !it_is_npc_turn
         }
         
         if (it_is_npc_turn) {
-            dialogue = dialogue + npc_name + ": "
+            prompt = prompt + npc_name + ": "
         } else {
-            dialogue = dialogue + "Player" + ": "
+            prompt = prompt + "Player" + ": "
         }
 
-        return dialogue
+        return prompt
     }
 
     // Only works for old man for now
     handleNPCFarFromPlayer(characterName: string) {
         const inProximity = this.checkProximity(this.positions[characterName], this.positions["player"]);
 
-        if (!inProximity && this.npc_text["player_oldman"] !== undefined) {
-            this.npc_text["player_oldman"].destroy();
+        if (!inProximity && this.npc_text[characterName] !== undefined) {
+            this.npc_text[characterName].destroy();
             this.npc_textbox.destroy();
             this.wasEnterPressed = false;
-            this.npc_text["player_oldman"] = undefined;
-            this.npc_convos["player_oldman"] = this.npc_convos["player_oldman"].slice(0,1)
+            this.npc_text[characterName] = undefined;
+            this.npc_convos[characterName] = this.npc_convos[characterName].slice(0,1)
             this.npc_convo_started = false
         } 
 
