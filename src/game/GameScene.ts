@@ -29,6 +29,8 @@ export default class GameScene extends Phaser.Scene {
     // for displaying the coordinates
     private xCoord!: Phaser.GameObjects.Text;
     private yCoord!: Phaser.GameObjects.Text;
+    // for subtitle instructions
+    private subtitles!: Phaser.GameObjects.Text;
     // the background is divided into a n x n grid full of cells
     private dimension = 80; // the background has to be square
     private cellWidth!: integer;
@@ -203,10 +205,15 @@ export default class GameScene extends Phaser.Scene {
         this.createAnims("player_oldman");
         
         // coordinates
-        this.xCoord = this.add.text(20,20,'X: 0', { fontSize: '20px', fill: '#fff', backgroundColor: '#000000',});
+        this.xCoord = this.add.text(20,20,'X: 0', { fontSize: '20px', color: '#fff', backgroundColor: '#000000',});
         this.xCoord.setScrollFactor(0);
-        this.yCoord = this.add.text(20,40,'Y: 0', { fontSize: '20px', fill: '#fff', backgroundColor: '#000000', });
+        this.yCoord = this.add.text(20,40,'Y: 0', { fontSize: '20px', color: '#fff', backgroundColor: '#000000', });
         this.yCoord.setScrollFactor(0);
+
+        // subtitle instructions for the user
+        this.subtitles = this.add.text(this.centerX, this.centerY + 300, "", { fontSize: '20px', color: 'black', backgroundColor: "white"})
+        this.subtitles.setScrollFactor(0)
+        this.subtitles.setOrigin(0.5, 0.5)
 
         // centering the player in the viewport
         this.cameras.main.startFollow(this.player, true, 1, 1);
@@ -885,11 +892,15 @@ export default class GameScene extends Phaser.Scene {
                 this.player_textbox = this.add.image(playerX + playerXOffset + 110, playerY + playerYOffset + 35, "textbox");
                 this.player_text = this.add.text(playerX + playerXOffset, playerY + playerYOffset, '', { fontFamily: 'Arial', color: 'black', wordWrap: { width: this.dialogueWidth }, align: "center"});
                 this.player_text_created = true;
+                this.subtitles.text = "(press Enter or type to start conversation)"
 
                 // Optional: add keyboard listener once
                 if (!this.keyboardListenerAdded) {
                     if (this.input.keyboard && this.player_text !== undefined) {
                         this.input.keyboard.on('keydown', event => {
+                            if (this.subtitles.text === "(type your message)") {
+                                this.subtitles.text = "(press Enter to send message)"
+                            }
                             if (!this.player_text_active) return;
                             if (!this.player_text) return;
                 
@@ -933,6 +944,9 @@ export default class GameScene extends Phaser.Scene {
                     const oldman_convo_starter = "Welcome, traveler. What brings you to our town?"
                     this.oldman_convo.push(oldman_convo_starter)
                     this.oldman_text = this.add.text(npcX + npcXOffset, npcY + npcYOffset, oldman_convo_starter, { fontFamily: 'Arial', color: 'black', wordWrap: { width: this.dialogueWidth }, align: "center"})
+                    if (this.subtitles.text === "(press Enter or type to start conversation)") {
+                        this.subtitles.text = "(type your message)"
+                    }
                 }
             } else {
                 if (this.oldman_text == undefined && this.oldman_convo_started) {
@@ -945,6 +959,7 @@ export default class GameScene extends Phaser.Scene {
                 if (this.player_text) {
                     // Upon pressing Enter, generate NPC's next response
                     if (this.enterKey.isDown && !this.wasEnterPressed) {
+                        this.subtitles.text = ""
                         this.oldman_convo.push(this.player_text.text)
                         const prompt = this.createPrompt(this.oldman_convo, "Old Man")
                         const promptLength = prompt.length
@@ -969,6 +984,7 @@ export default class GameScene extends Phaser.Scene {
                             this.oldman_convo.push(next_npc_response)
                             this.oldman_text.destroy()
                             this.oldman_text = this.add.text(npcX + npcXOffset, npcY + npcYOffset, next_npc_response, { fontFamily: 'Arial', color: 'black', wordWrap: { width: this.dialogueWidth }, align: "center"})
+                            this.subtitles.text = "(type your message)"
                         })
                         this.wasEnterPressed = true;
                     }
@@ -1053,6 +1069,7 @@ export default class GameScene extends Phaser.Scene {
             this.player_text = undefined;
             this.player_text_active = false;
             this.player_text_created = false;
+            this.subtitles.text = ""
         } 
     }
 
