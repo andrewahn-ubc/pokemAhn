@@ -878,6 +878,8 @@ export default class GameScene extends Phaser.Scene {
                         this.player_textbox = this.add.image(playerX + playerXOffset + 110, playerY + playerYOffset + 35, "textbox");
                         this.player_textbox.setDepth(0)
                         this.player_text.setDepth(1)
+                        this.player_text.x = playerX + playerXOffset
+                        this.player_text.y = playerY + playerYOffset
                         this.oldman_convo_started = true
                     }
                 }
