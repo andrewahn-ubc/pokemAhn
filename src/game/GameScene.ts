@@ -9,13 +9,13 @@ export default class GameScene extends Phaser.Scene {
     private npc_convo_started = false;
     private npc_started_convo = true;
     private npc_convos: Record<string, string[]> = {
-        "player_oldman": []
+        "Old Man": []
     };
     private npc_convo_starter: Record<string, string> = {
-        "player_oldman": "Welcome, traveler. What brings you to our town?"
+        "Old Man": "Welcome, traveler. What brings you to our town?"
     };
     private npc_prompts: Record<string, string> = {
-        "player_oldman": "You are an old man NPC in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. You always say something. Do not leave any lines blank.\nPlayer: Hello\nOld Man: Welcome traveler.\nPlayer: Thank you\n"
+        "Old Man": "You are an old man NPC in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. You always say something. Do not leave any lines blank.\nPlayer: Hello\nOld Man: Welcome traveler.\nPlayer: Thank you\n"
     };
     private player_text!: Phaser.GameObjects.Text | undefined;
     private player_textbox!: Phaser.GameObjects.Image;
@@ -57,7 +57,7 @@ export default class GameScene extends Phaser.Scene {
     private playlist: string[] = ["bgMusic", "wouldthati", "why", "mistake", "1036", "wurli", "baby", "spacecadet", "thnkfast"];
     private nextSongIndex = 0;
     // character movement
-    private delay: Record<string, number> = {"player": 200, "player_oldman": 600};
+    private delay: Record<string, number> = {"player": 200, "Old Man": 600};
     // layout
     //      Legend
     //      1: tree
@@ -118,7 +118,7 @@ export default class GameScene extends Phaser.Scene {
     preload() {
         this.load.image("background", "/assets/bg.png");
         this.load.spritesheet("player", "/assets/players/player.png", { frameWidth: 48, frameHeight: 48 });
-        this.load.spritesheet("player_oldman", "/assets/players/player_oldman.png", { frameWidth: 32, frameHeight: 48 });
+        this.load.spritesheet("Old Man", "/assets/players/player_oldman.png", { frameWidth: 32, frameHeight: 48 });
         this.load.image("textbox", "/assets/textbox.png");
         this.load.image("github", "/assets/github-mark.png");
         this.load.image("tree", "/assets/tree.png");
@@ -203,13 +203,13 @@ export default class GameScene extends Phaser.Scene {
         this.centerY = window.innerHeight/2;
         this.setUpWorld();
         // character
-        this.player = this.addCharacter(38, 39, "player");
-        this.player_oldman = this.addCharacter(38, 38, "player_oldman");
+        this.player = this.addCharacter(38, 39, "player", "", "");
+        this.player_oldman = this.addCharacter(38, 38, "Old Man", "Welcome, traveler. What brings you to our town?", "You are an old man NPC in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. You always say something. Do not leave any lines blank.\nPlayer: Hello\nOld Man: Welcome traveler.\nPlayer: Thank you\n");
         this.player.setCollideWorldBounds(true);
 
         // character animations
         this.createAnims("player");
-        this.createAnims("player_oldman");
+        this.createAnims("Old Man");
         
         // coordinates
         this.xCoord = this.add.text(20,20,'X: 0', { fontSize: '20px', color: '#fff', backgroundColor: '#000000',});
@@ -266,11 +266,14 @@ export default class GameScene extends Phaser.Scene {
     }
 
     // Positions in relative coordinates
-    addCharacter(positionX: number, positionY: number, name: string) {
+    addCharacter(positionX: number, positionY: number, name: string, convo_starter: string, prompt: string) {
         const realCoord = this.realCoord(positionX, positionY);
         const player = this.physics.add.sprite(realCoord[0], realCoord[1], name);
         this.positions[name] = [positionX, positionY];
         this.characters[name] = player;
+        this.npc_convos[name] = [];
+        this.npc_convo_starter[name] = convo_starter;
+        this.npc_prompts[name] = prompt;
 
         return player;
     }
@@ -286,7 +289,7 @@ export default class GameScene extends Phaser.Scene {
         const relativeCoords = this.getPlayerCoords("player");
         this.xCoord.setText("X: " + Math.floor(relativeCoords[0]));
         this.yCoord.setText("Y: " + Math.floor(relativeCoords[1]));
-        this.handleNPC("player_oldman")
+        this.handleNPC("Old Man")
 
         // handle initial arrow click (without this section, there's a pause before player moves)
         if (Phaser.Input.Keyboard.JustDown(this.cursors.right)) {
