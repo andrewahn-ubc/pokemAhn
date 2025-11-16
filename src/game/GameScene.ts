@@ -3,20 +3,14 @@ import Phaser from "phaser";
 export default class GameScene extends Phaser.Scene {
     private bg!: Phaser.GameObjects.Image;
     private player!: Phaser.Physics.Arcade.Sprite;
-    private player_oldman!: Phaser.Physics.Arcade.Sprite;
+    // NPCs
     private npc_text: Record<string, Phaser.GameObjects.Text | undefined> = {};
     private npc_textbox!: Phaser.GameObjects.Image;
     private npc_convo_started = false;
     private npc_started_convo = true;
-    private npc_convos: Record<string, string[]> = {
-        "Old Man": []
-    };
-    private npc_convo_starter: Record<string, string> = {
-        "Old Man": "Welcome, traveler. What brings you to our town?"
-    };
-    private npc_prompts: Record<string, string> = {
-        "Old Man": "You are an old man NPC in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. You always say something. Do not leave any lines blank.\nPlayer: Hello\nOld Man: Welcome traveler.\nPlayer: Thank you\n"
-    };
+    private npc_convos: Record<string, string[]> = {};
+    private npc_convo_starter: Record<string, string> = {};
+    private npc_prompts: Record<string, string> = {};
     private player_text!: Phaser.GameObjects.Text | undefined;
     private player_textbox!: Phaser.GameObjects.Image;
     private player_text_created = false;  // track if we've already created it
@@ -57,7 +51,7 @@ export default class GameScene extends Phaser.Scene {
     private playlist: string[] = ["bgMusic", "wouldthati", "why", "mistake", "1036", "wurli", "baby", "spacecadet", "thnkfast"];
     private nextSongIndex = 0;
     // character movement
-    private delay: Record<string, number> = {"player": 200, "Old Man": 600};
+    private delay: Record<string, number> = {};
     // layout
     //      Legend
     //      1: tree
@@ -116,9 +110,13 @@ export default class GameScene extends Phaser.Scene {
     // load the assets
 
     preload() {
+        // background
         this.load.image("background", "/assets/bg.png");
+        // characters
         this.load.spritesheet("player", "/assets/players/player.png", { frameWidth: 48, frameHeight: 48 });
         this.load.spritesheet("Old Man", "/assets/players/player_oldman.png", { frameWidth: 32, frameHeight: 48 });
+        this.load.spritesheet("Nurse Joy", "/assets/players/player_nursejoy.png", { frameWidth: 32, frameHeight: 48 });
+        // mischelaneous
         this.load.image("textbox", "/assets/textbox.png");
         this.load.image("github", "/assets/github-mark.png");
         this.load.image("tree", "/assets/tree.png");
@@ -203,13 +201,10 @@ export default class GameScene extends Phaser.Scene {
         this.centerY = window.innerHeight/2;
         this.setUpWorld();
         // character
-        this.player = this.addCharacter(38, 39, "player", "", "");
-        this.player_oldman = this.addCharacter(38, 38, "Old Man", "Welcome, traveler. What brings you to our town?", "You are an old man NPC in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. You always say something. Do not leave any lines blank.\nPlayer: Hello\nOld Man: Welcome traveler.\nPlayer: Thank you\n");
+        this.player = this.addCharacter(38, 39, "player", 200, "", "");
+        this.addCharacter(38, 34, "Old Man", 100000, "Welcome, traveler. What brings you to our town?", "You are an old man NPC in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hello\nOld Man: Welcome traveler.\nPlayer: Thank you\n");
+        this.addCharacter(38, 38, "Nurse Joy", 100000, "Hi! Are your pokemon doing alright?", "You are an young female nurse NPC in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hello\nNurse Joy: Welcome traveler.\nPlayer: Thank you\n");
         this.player.setCollideWorldBounds(true);
-
-        // character animations
-        this.createAnims("player");
-        this.createAnims("Old Man");
         
         // coordinates
         this.xCoord = this.add.text(20,20,'X: 0', { fontSize: '20px', color: '#fff', backgroundColor: '#000000',});
@@ -235,7 +230,7 @@ export default class GameScene extends Phaser.Scene {
         // background music 
         this.backgroundMusic = this.sound.add('bgMusic', {
             loop: true,  // Loop the music
-            volume: 0.5  // Set volume (0.0 to 1.0)
+            volume: 0.0  // Set volume (0.0 to 1.0)
         });
         this.backgroundMusic.play();
         if (this.input.keyboard) {
@@ -256,6 +251,9 @@ export default class GameScene extends Phaser.Scene {
                     this.backgroundMusic = this.sound.add(this.playlist[this.nextSongIndex], { loop: true, volume: 0.5 });
                     this.backgroundMusic.play();
                 }
+                if (event.key === 'Enter') {  
+                    this.handleEnterPress();
+                }
             });
         }
 
@@ -265,12 +263,20 @@ export default class GameScene extends Phaser.Scene {
         }
     }
 
+    handleEnterPress() {
+        if (this.player_text) {
+            // this.player_text.text = ""
+        }
+    }
+
     // Positions in relative coordinates
-    addCharacter(positionX: number, positionY: number, name: string, convo_starter: string, prompt: string) {
+    addCharacter(positionX: number, positionY: number, name: string, delay: number, convo_starter: string, prompt: string) {
         const realCoord = this.realCoord(positionX, positionY);
         const player = this.physics.add.sprite(realCoord[0], realCoord[1], name);
         this.positions[name] = [positionX, positionY];
         this.characters[name] = player;
+        this.createAnims(name);
+        this.delay[name] = delay;
         this.npc_convos[name] = [];
         this.npc_convo_starter[name] = convo_starter;
         this.npc_prompts[name] = prompt;
@@ -290,6 +296,8 @@ export default class GameScene extends Phaser.Scene {
         this.xCoord.setText("X: " + Math.floor(relativeCoords[0]));
         this.yCoord.setText("Y: " + Math.floor(relativeCoords[1]));
         this.handleNPC("Old Man")
+        this.handleNPC("Nurse Joy")
+        this.handleNPCsFarFromPlayer()
 
         // handle initial arrow click (without this section, there's a pause before player moves)
         if (Phaser.Input.Keyboard.JustDown(this.cursors.right)) {
@@ -333,7 +341,6 @@ export default class GameScene extends Phaser.Scene {
     handleNPC(npm_name: string) {
         this.startMovingNPC(npm_name);
         this.handleNPCNearPlayer(npm_name);
-        this.handleNPCFarFromPlayer(npm_name);
     }
 
     setUpWorld() {
@@ -815,7 +822,6 @@ export default class GameScene extends Phaser.Scene {
                 const randomAction = actionList[randomIndex]
 
                 this.moveCharacter(randomAction, characterName);
-                // character.anims.play(characterName + '-still')
             }
         })
     }
@@ -888,7 +894,7 @@ export default class GameScene extends Phaser.Scene {
                 this.player_text_created = true;
                 this.subtitles.text = "(press Enter or type to start conversation)"
 
-                // Optional: add keyboard listener once
+                // Add keyboard listener once
                 if (!this.keyboardListenerAdded) {
                     if (this.input.keyboard && this.player_text !== undefined) {
                         this.input.keyboard.on('keydown', event => {
@@ -1043,30 +1049,48 @@ export default class GameScene extends Phaser.Scene {
         return prompt
     }
 
-    // Only works for old man for now
-    handleNPCFarFromPlayer(characterName: string) {
-        const inProximity = this.checkProximity(this.positions[characterName], this.positions["player"]);
+    handleNPCsFarFromPlayer() {
+        let far_from_every_npc = true
 
-        if (!inProximity && this.npc_text[characterName] !== undefined) {
-            this.npc_text[characterName].destroy();
-            this.npc_textbox.destroy();
-            this.wasEnterPressed = false;
-            this.npc_text[characterName] = undefined;
-            this.npc_convos[characterName] = this.npc_convos[characterName].slice(0,0)
-            this.npc_convo_started = false
-            this.npc_started_convo = true
-        } 
+        for (const characterName in this.positions) {
+            if (characterName === "player") continue
 
-        if (!inProximity && this.player_text !== undefined) {
+            const inProximity = this.checkProximity(this.positions[characterName], this.positions["player"]);
+            if (inProximity) {
+                far_from_every_npc = false
+            }
+
+            if (!inProximity && this.npc_text[characterName] !== undefined) {
+                this.npc_text[characterName].destroy();
+                this.npc_textbox.destroy();
+                this.wasEnterPressed = false;
+                this.npc_text[characterName] = undefined;
+                this.npc_convos[characterName] = this.npc_convos[characterName].slice(0,0)
+                this.npc_convo_started = false
+                this.npc_started_convo = true
+            } 
+
+            // if (!inProximity && this.player_text !== undefined) {
+            //     this.player_text.destroy();
+            //     this.player_textbox.destroy();
+            //     this.player_text = undefined;
+            //     this.player_text_active = false;
+            //     this.player_text_created = false;
+            //     this.subtitles.text = ""
+            // } 
+        }
+
+        if (far_from_every_npc && this.player_text !== undefined) {
             this.player_text.destroy();
             this.player_textbox.destroy();
             this.player_text = undefined;
             this.player_text_active = false;
             this.player_text_created = false;
-            this.subtitles.text = ""
-        } 
+            this.subtitles.text = "";
+        }
     }
 
+    // Returns true if npc and player are close 
     checkProximity(npcPosition: [number, number], playerPosition: [number, number]) {
         const npcX = npcPosition[0];
         const npcY = npcPosition[1];
