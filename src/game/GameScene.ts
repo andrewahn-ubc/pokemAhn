@@ -47,6 +47,7 @@ export default class GameScene extends Phaser.Scene {
     private npcMoveEvents: Record<string, Phaser.Time.TimerEvent | null> = {};
     private delay: Record<string, number> = {};
     private npcTickSpeed: integer = 4;
+    private instructionZone: [[number, number], [number, number]] = [[0,0],[0,0]]; // [top left corner, bottom right corner]
     // "center" coordinates (because (0,0) isn't really the "center" of this scene) (in real coordinates)
     private centerX!: integer;
     private centerY!: integer;
@@ -231,6 +232,8 @@ export default class GameScene extends Phaser.Scene {
         this.add.text(this.centerX - 100, this.centerY,'        ↑\npress ←   → to move\n        ↓', { fontSize: '20px', color: 'black'}).setOrigin(0.5,0.5);
         this.add.text(this.centerX - 100, this.centerY + 50,'press TAB to pause music', { fontSize: '20px', color: 'black'}).setOrigin(0.5,0.5);
         this.add.text(this.centerX - 100, this.centerY + 100,'press 1 to change song', { fontSize: '20px', color: 'black'}).setOrigin(0.5,0.5);
+        this.instructionZone[0] = [31,35];
+        this.instructionZone[1] = [42,47];
         // character
         this.addCharacter("Old Man", 500, "Welcome, traveler. What brings you to our town?", "You are an old man NPC in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hello\nOld Man: Welcome traveler.\nPlayer: Thank you\n");
         this.addCharacter("Nurse Joy", 350, "Hi! Are your pokemon doing alright?", "You are a young female nurse NPC in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hi!\nNurse Joy: Welcome to our town!!\nPlayer: Thank you!\n");
@@ -341,6 +344,11 @@ export default class GameScene extends Phaser.Scene {
             randomY = Math.round(Math.random()*this.dimension);
 
             if (randomX < 2 || randomX > 78 || randomY < 2 || randomY > 78) continue
+
+            if (this.instructionZone[0][0] < randomX && randomX < this.instructionZone[1][0] 
+                && this.instructionZone[0][1] < randomY && randomY < this.instructionZone[1][1]) {
+                continue
+            }
 
             if (this.collidableLayout[randomY][randomX] == 0) {
                 foundValidSpawnPoint = true
