@@ -255,11 +255,11 @@ export default class GameScene extends Phaser.Scene {
         this.player = this.addCharacter("player", 200, "", "", 38, 43);
         this.player.setCollideWorldBounds(true);
         
-        // coordinates
-        this.xCoord = this.add.text(20,20,'X: 0', { fontSize: '20px', color: '#fff', backgroundColor: '#000000',});
-        this.xCoord.setScrollFactor(0);
-        this.yCoord = this.add.text(20,40,'Y: 0', { fontSize: '20px', color: '#fff', backgroundColor: '#000000', });
-        this.yCoord.setScrollFactor(0);
+        // // coordinates
+        // this.xCoord = this.add.text(20,20,'X: 0', { fontSize: '20px', color: '#fff', backgroundColor: '#000000',});
+        // this.xCoord.setScrollFactor(0);
+        // this.yCoord = this.add.text(20,40,'Y: 0', { fontSize: '20px', color: '#fff', backgroundColor: '#000000', });
+        // this.yCoord.setScrollFactor(0);
 
         // subtitle instructions for the user
         this.subtitles = this.add.text(this.centerX, this.centerY + 300, "", { fontSize: '18px', color: 'black', backgroundColor: "white"})
@@ -268,13 +268,14 @@ export default class GameScene extends Phaser.Scene {
 
         // centering the player in the viewport
         this.cameras.main.startFollow(this.player, true, 1, 1);
-        // create map view
-        const secondCamera = this.cameras.add(window.innerWidth - 4 * this.cellWidth, this.cellHeight, this.cellWidth * 3, this.cellHeight * 3); // (x, y, width, height)
-        // Move camera to a specific position (x, y)
-        secondCamera.scrollX = this.centerX - 100; // Move horizontally
-        secondCamera.scrollY = this.centerY - 90; // Move vertically
-        secondCamera.setZoom(0.1); // Zoom out
-        secondCamera.setBackgroundColor(0x000000); // Black background
+
+        // // create map view
+        // const secondCamera = this.cameras.add(window.innerWidth - 4 * this.cellWidth, this.cellHeight, this.cellWidth * 3, this.cellHeight * 3); // (x, y, width, height)
+        // // Move camera to a specific position (x, y)
+        // secondCamera.scrollX = this.centerX - 100; // Move horizontally
+        // secondCamera.scrollY = this.centerY - 90; // Move vertically
+        // secondCamera.setZoom(0.1); // Zoom out
+        // secondCamera.setBackgroundColor(0x000000); // Black background
 
         // background music 
         this.backgroundMusic = this.sound.add('bgMusic', {
@@ -367,8 +368,8 @@ export default class GameScene extends Phaser.Scene {
         this.player.setVelocity(0);
         // update coordinates
         const relativeCoords = this.getPlayerCoords("player");
-        this.xCoord.setText("X: " + Math.floor(relativeCoords[0]));
-        this.yCoord.setText("Y: " + Math.floor(relativeCoords[1]));
+        // this.xCoord.setText("X: " + Math.floor(relativeCoords[0]));
+        // this.yCoord.setText("Y: " + Math.floor(relativeCoords[1]));
         this.handleNPC("Old Man")
         this.handleNPC("Nurse Joy")
         this.handleNPC("Professor Oak")
