@@ -249,7 +249,7 @@ export default class GameScene extends Phaser.Scene {
         this.addCharacter("Baby", 100, "Goo goo gah gah lol.", "You are a baby NPC in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hi baby, what's your name?\nBaby: Goo goo gah gah lol.\nPlayer: I see, have a good day.\n");
         this.addCharacter("Cynthia", 310, "The history here is truly fascinating.", "You are a expert female Pokemon trainer in a Pokémon-style game. Speak confidently and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hi, could we have a pokemon battle?\nCynthia: I would never waste my time on you.\nPlayer: I see, have a good day.\n");
         this.addCharacter("Bicycle Kid", 200, "You could never beat me in a Pokemon battle. I'm goated.", "You are a boy riding a bicycle in a Pokémon-style game, and you train pokemon too. Speak confidently and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hi, could we have a pokemon battle?\nBicycle Kid: You don't stand a chance against me.\nPlayer: We'll have to find out.\n");
-        this.player = this.addCharacter("player", 200, "", "", 38, 39);
+        this.player = this.addCharacter("player", 200, "", "", 38, 43);
         this.player.setCollideWorldBounds(true);
         
         // coordinates
