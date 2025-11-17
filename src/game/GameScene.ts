@@ -227,6 +227,10 @@ export default class GameScene extends Phaser.Scene {
         this.centerX = window.innerWidth/2;
         this.centerY = window.innerHeight/2;
         this.setUpWorld();
+        // show instructions
+        this.add.text(this.centerX - 100, this.centerY,'        ↑\npress ←   → to move\n        ↓', { fontSize: '20px', color: 'black'}).setOrigin(0.5,0.5);
+        this.add.text(this.centerX - 100, this.centerY + 50,'press TAB to pause music', { fontSize: '20px', color: 'black'}).setOrigin(0.5,0.5);
+        this.add.text(this.centerX - 100, this.centerY + 100,'press 1 to change song', { fontSize: '20px', color: 'black'}).setOrigin(0.5,0.5);
         // character
         this.addCharacter("Old Man", 500, "Welcome, traveler. What brings you to our town?", "You are an old man NPC in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hello\nOld Man: Welcome traveler.\nPlayer: Thank you\n");
         this.addCharacter("Nurse Joy", 350, "Hi! Are your pokemon doing alright?", "You are a young female nurse NPC in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hi!\nNurse Joy: Welcome to our town!!\nPlayer: Thank you!\n");
@@ -286,8 +290,7 @@ export default class GameScene extends Phaser.Scene {
             });
             this.cursors = this.input.keyboard.createCursorKeys();
             this.input.keyboard.on('keydown', (event: KeyboardEvent) => {
-                if (event.key === '8') {  
-                    console.log("Number 8 pressed!");
+                if (event.key === '1') {  
                     this.backgroundMusic.stop();
                     this.nextSongIndex = (this.nextSongIndex + 1) % this.playlist.length
                     this.backgroundMusic = this.sound.add(this.playlist[this.nextSongIndex], { loop: true, volume: 0.5 });
