@@ -1,3 +1,4 @@
+import { resolveObjectURL } from "buffer";
 import Phaser from "phaser";
 
 export default class GameScene extends Phaser.Scene {
@@ -20,7 +21,7 @@ export default class GameScene extends Phaser.Scene {
     private keyboardListenerAdded = false;
     private dialogueWidth = 200;
     private characters: Record<string, Phaser.Physics.Arcade.Sprite> = {};
-    private closeToNPC: boolean = false;
+    private closeToNPC: Record<string, boolean> = {};
     // keys
     private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
     private spaceKey!: Phaser.Input.Keyboard.Key;
@@ -330,6 +331,7 @@ export default class GameScene extends Phaser.Scene {
         this.npc_convos[name] = [];
         this.npc_convo_starter[name] = convo_starter;
         this.npc_prompts[name] = prompt;
+        this.closeToNPC[name] = false;
         return player;
     }
 
@@ -934,10 +936,11 @@ export default class GameScene extends Phaser.Scene {
         }
 
         if (inProximity) {
-            this.closeToNPC = true;
+            this.closeToNPC[characterName] = true;
             this.stopMovingNPC(characterName);
             this.npc_currently_talking = characterName;
             const relativePosition = this.checkRelativePosition(this.positions[characterName], this.positions["player"]);
+            console.log(relativePosition)
             this.characters[characterName].anims.play(characterName + '-still-' + relativePosition);
             this.player.anims.play("player-still-" + opposites[relativePosition]);
 
@@ -1084,7 +1087,7 @@ export default class GameScene extends Phaser.Scene {
                 }
             }
         } else {
-            this.closeToNPC = false;
+            this.closeToNPC[characterName] = false;
             this.startMovingNPC(characterName);
         }
     }
@@ -1238,7 +1241,14 @@ export default class GameScene extends Phaser.Scene {
             this.moveEvent.remove(); // Stop the movement loop
             this.moveEvent = null;
         }
-        if (this.mostRecentPlayerMove && !this.closeToNPC) {
+        let closeToAnyNPC = false
+        for (const npc in this.closeToNPC) {
+            if (this.closeToNPC[npc]) {
+                closeToAnyNPC = true
+            }
+
+        }
+        if (this.mostRecentPlayerMove && !closeToAnyNPC) {
             const activeTweens = this.tweens.getTweensOf(this.player);
             if (activeTweens.length === 0) {
                 this.player.anims.play(character + '-still-' + this.mostRecentPlayerMove);
