@@ -341,7 +341,7 @@ export default class GameScene extends Phaser.Scene {
         this.addCharacter("Baby", 100, "Goo goo gah gah lol.", "You are a baby NPC in a Pokémon-style game. Speak warmly and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hi baby, what's your name?\nBaby: Goo goo gah gah lol.\nPlayer: I see, have a good day.\n");
         this.addCharacter("Cynthia", 310, "The history here is truly fascinating.", "You are a expert female Pokemon trainer in a Pokémon-style game. Speak confidently and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hi, could we have a pokemon battle?\nCynthia: I would never waste my time on you.\nPlayer: I see, have a good day.\n");
         this.addCharacter("Bicycle Kid", 200, "You could never beat me in a Pokemon battle. I'm goated.", "You are a boy riding a bicycle in a Pokémon-style game, and you train pokemon too. Speak confidently and briefly.\nReply with a friendly sentence of 5–10 words. \nPlayer: Hi, could we have a pokemon battle?\nBicycle Kid: You don't stand a chance against me.\nPlayer: We'll have to find out.\n");
-        this.player = this.addCharacter("player", this.player_delay, "", "", this.dimension/2, this.dimension/2 - 1);
+        this.player = this.addCharacter("player", this.player_delay, "", "", this.dimension/2, this.dimension/2 - 15);
     }
 
     // must be called from set-up world
@@ -353,6 +353,34 @@ export default class GameScene extends Phaser.Scene {
                 this.layout[j][i] = 2
             }
         }
+
+        // image
+        const [realX, realY] = this.realCoord(x - 1, y - 2)
+        const heroImage = this.add.sprite(realX + 10, realY - 20, imgPath).setOrigin(0.5,0.5).setDepth(1);
+        const targetWidth = 320
+        const targetHeight = 200
+        const scaleX = targetWidth / heroImage.width
+        const scaleY = targetHeight / heroImage.height
+        heroImage.setScale(scaleX, scaleY)
+        heroImage.setInteractive({ useHandCursor: true });
+        heroImage.on('pointerdown', () => {
+            window.open('https://github.com/andrewahn-ubc', '_blank');
+        });
+        heroImage.on('pointerover', () => {
+            heroImage.setScale(1.05*scaleX, 1.05*scaleY);
+        });
+        heroImage.on('pointerout', () => {
+            heroImage.setScale(scaleX, scaleY); 
+        });
+
+        // title
+        this.add.text(realX - 150, realY + 95, title, { fontSize: '28px', color: 'black', wordWrap: { width: 200 }, align: "left"}).setDepth(1);
+
+        // date
+        this.add.text(realX - 150, realY + 137, date, { fontSize: '16px', color: 'black', wordWrap: { width: 200 }, align: "left"}).setDepth(1);
+
+        // description
+        this.add.text(realX - 150, realY + 170, description, { fontSize: '16px', color: 'black', wordWrap: { width: 340 }, align: "left"}).setDepth(1);
     }
 
     // Positions in relative coordinates
@@ -499,9 +527,10 @@ export default class GameScene extends Phaser.Scene {
 
         // set up cards
         const cardVerticalGap = 14
-        this.addCard("", "", "", "", "", 61, 56 - cardVerticalGap)
-        this.addCard("", "", "", "", "", 61, 56 - 2*cardVerticalGap)
-        this.addCard("", "", "", "", "", 61, 56 - 3*cardVerticalGap)
+        const dummy_desc = "this is the description for my project that I worked on for a long time and I will use this description."
+        this.addCard("hero_image", "title title", "", dummy_desc, "Dec 1st, 2025", 61, 56 - cardVerticalGap)
+        this.addCard("hero_image", "title title", "", dummy_desc, "Dec 1st, 2025", 61, 56 - 2*cardVerticalGap)
+        this.addCard("hero_image", "title title", "", dummy_desc, "Dec 1st, 2025", 61, 56 - 3*cardVerticalGap)
 
         // trees, paths, bushes
         this.placeTreesAndFlowerbeds();
