@@ -52,9 +52,9 @@ Legend
 # TODO
 - implement dialogue with NPCs (done!)
 - make a better map
-- make some of the NPCs have goals and dreams (make them walk along specific trajectories instead of wandering around randomly)
 - implement signs that display a popup
 - implement ways to add personal website content
+- fix path generation (so many bugs... (many cases not covered properly))
 
 # Bugs
 - player shouldn't be able to start conversation? or should they?
